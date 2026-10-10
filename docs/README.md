@@ -1,12 +1,16 @@
 # KAGE Specification Suite & Architecture Map
 
-**Status:** Approved v0.2.1 · **Total Specifications:** 25 Documents · **Target:** v1.0.0 MVP
+**Status:** Architecture v0.4.1 · Core Implementation Complete · **Total Specifications:** 25 Documents · **Target:** v1.0.0 Alpha / MVP
+
+<p align="center">
+  <img src="../public/preview.png" alt="KAGE Architecture Preview" width="100%" />
+</p>
 
 Welcome to the KAGE technical documentation suite. KAGE is a developer-first standalone browser built on **Tauri (Rust) + Chromium Embedded Framework (CEF) + React/TypeScript (Liquid Glass UI Chrome)**.
 
 ---
 
-## 1. System Interconnection Topology
+## <img src="../public/icons/layers.svg" width="20" height="20" align="absmiddle" /> 1. System Interconnection Topology
 
 Every document in this suite is connected through the **Prime Architectural Invariant**:
 > *"AI never gets browser authority directly. Every AI action becomes a typed Tool Bus request, and the Tool Bus—not the model, prompt, plugin, or UI—owns validation, authorization, execution, cancellation, and auditing."*
@@ -96,7 +100,7 @@ graph TD
 
 ---
 
-## 2. Current Milestone Status
+## <img src="../public/icons/activity.svg" width="20" height="20" align="absmiddle" /> 2. Current Milestone Status
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────────┐
@@ -106,25 +110,25 @@ graph TD
 │  PHASE 2A — CEF Engine Infrastructure            ██████████  SEALED (100%)       │
 │  PHASE 2B — Real CEF Lifecycle                   ██████████  SEALED (100%)       │
 │  PHASE 2C — Production Tauri + CEF Composition   ██████████  SEALED (100%)       │
-│  PHASE 2D — CEF 152 Sandbox Release Packaging    ██████████  SEALED (CEF-03b-D)  │
+│  PHASE 2D — CEF 152 Sandbox Release Packaging    ██████████  CI PASSED (RC PEND) │
 │  PHASE 3  — Browser Lifecycle & Control Plane    ██████████  SEALED (100%)       │
 │  PHASE 4  — Empirical CDP DevTools Protocol      ██████████  SEALED (100%)       │
 │  PHASE 5  — Live Telemetry & Context Streaming   ██████████  SEALED (100%)       │
-│  PHASE 6  — Developer Intelligence Subsystem     ██████████  SEALED (100%)       │
+│  PHASE 6  — Testing Lab & Contract Test Gates    ██████████  SEALED (100%)       │
 │  PHASE 7  — Profiles, Storage & Permissions      ██████████  SEALED (100%)       │
 │  PHASE 8  — Governed Tool Suite & Capabilities   ██████████  SEALED (100%)       │
-│  ──────────────────────────────────────────────────────────────────────────────  │
 │  PHASE 9  — Autonomous Agent Runtime & Context   ██████████  SEALED (100%)       │
-│  PHASE 10 — Verified Autonomy, STOP & Recovery   ░░░░░░░░░░  PENDING (Next)      │
-│  PHASE 11 — KAGE MVP Release & Hardened Shell    ░░░░░░░░░░  PENDING             │
+│  PHASE 10 — Verified Autonomy, STOP & Recovery   ██████████  SEALED (100%)       │
+│  PHASE 11 — KAGE MVP Release & Hardened Shell    ██████████  SEALED (100%)       │
 │  ──────────────────────────────────────────────────────────────────────────────  │
-│  FULL KAGE AUTONOMOUS AGENT CONTROL PLANE:       █████████░  IN PROGRESS (M10)   │
+│  PHASE 1-11 CORE IMPLEMENTATION:                 ██████████  COMPLETE (v0.4.1)   │
+│  SIGNED RELEASE CANDIDATE QUALIFICATION:         ░░░░░░░░░░  PENDING (MODEL B RC)│
 └──────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 3. Complete Specification Directory
+## <img src="../public/icons/book.svg" width="20" height="20" align="absmiddle" /> 3. Complete Specification Directory
 
 ### 01 · Product Definition
 | Document | Document ID | Description |
@@ -194,7 +198,7 @@ graph TD
 
 ---
 
-## 4. Subsystem Cross-Reference Matrix
+## <img src="../public/icons/cpu.svg" width="20" height="20" align="absmiddle" /> 4. Subsystem Cross-Reference Matrix
 
 How the primary subsystems interact with one another:
 
@@ -207,3 +211,14 @@ How the primary subsystems interact with one another:
 | **DevTools** (`05-devtools`) | `CEF_Integration` (CDP), `IPC_Protocol` | `Context_Engine`, `Testing_Lab` | CDP Multiplexer |
 | **Testing Lab** (`06-testing`) | `Tool_System`, `CEF_Integration` (CDP) | Test Runner, `Data_Model` | Headless Replay Engine |
 | **Plugins** (`07-platform`) | `Tool_System`, `IPC_Protocol` | Custom Panels, Extended Tools | Wasm Sandbox & Capability Manifest |
+
+---
+
+## <img src="../public/icons/shield.svg" width="20" height="20" align="absmiddle" /> 5. Milestone Verification Reports & Audits
+
+| Report / Document | Description | Status |
+|---|---|---|
+| [M11_Hardened_Shell_Integration.md](reports/M11_Hardened_Shell_Integration.md) | Phase 11 MVP release, STOP linearization, 20-layout geometry matrix, and HUD trace lineage | Core Implementation Complete (Release Qualification Pending) |
+| [M10_Verified_Autonomy_Seal.md](reports/M10_Verified_Autonomy_Seal.md) | Phase 10 Verified Autonomy, Tripartite Outcome Verifier, and Physical Host Chromium E2E | Verified & Sealed |
+| [KAGE_Ground_Truth_Audit.md](KAGE_Ground_Truth_Audit.md) | Authoritative codebase ground truth audit, eliminating discrepancies across specifications | Active Reference |
+| [KAGE_Browser_Control_Plane_Strategy.md](research/KAGE_Browser_Control_Plane_Strategy.md) | Architectural strategy, threat model, and five-plane isolation rationale | Active Strategy |

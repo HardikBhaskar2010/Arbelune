@@ -2,7 +2,7 @@
 
 **Milestone:** Phase 11 (MVP Release, Hardened Desktop Shell, & Ground Truth Reconciliation)  
 **Architecture Version:** v0.4.1 · **Target Milestone:** v1.0.0 Alpha / MVP  
-**Contract Verification:** 100% (All Inviolable Contracts `INV-01`–`INV-12`, `NO-MOCKS`, and `CEF-01`–`CEF-06` Sealed)  
+**Contract Verification:** All core implementation gates passed; release-candidate sandbox qualification pending  
 **Git Commit SHA:** `2373c448c23dbcc1e728655cd94104cde1c48e74`  
 **Automated CI Verification Command:** `python scripts/verify_contracts.py`
 
@@ -16,7 +16,7 @@ Phase 11 seals the desktop presentation plane, supervisory agent HUD, and runtim
 2. **Deterministic STOP Linearization Semantics (`GATE-11-A..E`):** STOP does not make impossible promises of retrospective mutation rollback. Instead, STOP defines an atomic linearization point at the `DispatchAdmissionGate`: future dispatches are immediately rejected (fail-closed), in-flight mutations settle or cancel cleanly according to their tokens, and concurrent tasks remain isolated.
 3. **Reconciled Canonical CEF Contract Inventory (`CEF-01..06`):** The contract ledger explicitly accounts for every canonical contract:
    - `CEF-01A` (Config preflight), `CEF-01B` (Runtime `cef::initialize()`),
-   - `CEF-02` (Dedicated subprocess helper launch & two-executable topology),
+   - CEF-02: Separate subprocess executable in Development; unified bootstrap executable with client DLL in Release,
    - `CEF-03b-A..D` (Sandbox compilation, runtime configuration, token proof, and packaging gate),
    - `CEF-04A..B` (Decoupled loop setting and `TID_UI` thread hop),
    - `CEF-05` (Native child HWND creation and `GetParent(child) == parent` attachment hierarchy),
@@ -125,31 +125,88 @@ The test suite validates five distinct concurrency gates plus the full UI-to-run
 |---|---|---|---|---|
 | **CEF-01** | `CEF-01A` | Host Preflight | `CefRuntime::validate_config()` + cache directory verification prior to `tauri::Builder` | **SEALED (STATIC)** |
 | **CEF-01** | `CEF-01B` | Engine Initialization | Live `cef::initialize()` in `kage-engine` runtime (`test_phase2b_complete_cef_pipeline`) | **SEALED (INTEGRATION)** |
-| **CEF-02** | `CEF-02` / `SUBPROC-01` | Subprocess Architecture | Dedicated helper executable topology (`kage-cef-subprocess.exe`) verified in packaging & phase 2B | **SEALED (SUBPROC-01)** |
+| **CEF-02** | `CEF-02` / `SUBPROC-01` | Subprocess Architecture | Dedicated helper executable topology in Dev profile / Unified Bootstrap in Release profile | **SEALED (SUBPROC-01)** |
 | **CEF-03b** | `CEF-03b-A` | Build Sandbox Enforcement | Static & compiler cfg checks: hard compile prohibition if sandbox is disabled in release | **SEALED (STATIC+CFG)** |
 | **CEF-03b** | `CEF-03b-B` | Runtime Sandbox Config | Release runtime configuration enforces active sandbox policy | **SEALED (RUNTIME CONFIG)** |
-| **CEF-03b** | `CEF-03b-C` | Process Token / ACL | Windows token inspection: Token query SUCCESS, AppContainer/Integrity audit | **SEALED (PHYSICAL HOST E2E)** |
-| **CEF-03b** | `CEF-03b-D` | Packaging Gate | 10-point release packaging checklist (`CEF_USE_BOOTSTRAP`) + 6-case fail-closed negative suite | **SEALED (10-POINT EMPIRICAL)** |
+| **CEF-03b** | `CEF-03b-C` | Process Token / ACL | Windows token inspection: Job limits & restricted SIDs verified in CI gate; physical host sandbox token qualification pending release candidate | **VERIFIED (CI PACKAGE GATE; PHYSICAL RC QUALIFICATION PENDING)** |
+| **CEF-03b** | `CEF-03b-D` | Packaging Gate | 10-point release packaging checklist (`CEF_USE_BOOTSTRAP`) + 6-case fail-closed negative suite | **VERIFIED (10-POINT EMPIRICAL; RELEASE RC QUALIFICATION PENDING)** |
 | **CEF-04** | `CEF-04A` | Decoupled Loop Setting | `multi_threaded_message_loop = true` verified in configuration | **SEALED (STATIC)** |
 | **CEF-04** | `CEF-04B` | `TID_UI` Thread Affinity | `CefUiExecutor::execute_real` enforces `currently_on_ui_thread() == true` via `CefPostTask` | **SEALED (INTEGRATION)** |
 | **CEF-05** | `CEF-05` | Child HWND Attachment | Native child window created via `browser_host_create_browser`, `GetParent(child) == parent` verified | **SEALED (INTEGRATION)** |
-| **CEF-06** | `CEF-06A` | Layout Math (Zero Overlap) | `validate_no_overlap()` across **5 viewport sizes × 4 DPI scales = 20 layout combinations** | **SEALED (INTEGRATION)** |
-| **CEF-06** | `CEF-06B` | Child HWND Placement | Child HWND embedded inside parent HWND with `WS_CLIPCHILDREN \| WS_CLIPSIBLINGS` | **SEALED (INTEGRATION)** |
-| **CEF-06** | `CEF-06C` | Host Composition | Real Tauri WebView2 + CEF host composition verified via `test_production_seal.ps1` | **SEALED (PHYSICAL HOST E2E)** |
+| **CEF-06A** | `CEF-06A` | Layout Math (Zero Overlap) | `validate_no_overlap()` across **5 viewport sizes × 4 DPI scales = 20 layout combinations** | **SEALED (INTEGRATION)** |
+| **CEF-06B** | `CEF-06B` | Child HWND Placement | Child HWND embedded inside parent HWND with `WS_CLIPCHILDREN \| WS_CLIPSIBLINGS` | **SEALED (INTEGRATION)** |
+| **CEF-06C** | `CEF-06C` | Host Composition | Real Tauri WebView2 + CEF host composition verified via `test_production_seal.ps1` (Dev profile HWND composition) | **VERIFIED (PHYSICAL HOST E2E - DEV PROFILE)** |
 
 ---
 
-## 4. Native CEF Child Aperture Runtime & Clarified Layout Matrix (`INV-01`, `CEF-06`, `GATE-11-F`..`I`)
+## 4. CEF 152 Windows Sandbox Architecture & Process Wiring
+
+### CEF M138+ / CEF 152 Architectural Requirements
+Official CEF Windows sandbox documentation sets a strict invariant for Chromium M138+ / CEF 152:
+1. **Single-Executable Requirement:** Windows Chromium sandbox operation requires the main browser process and all child subprocesses to run from the **same executable binary**.
+2. **Prohibition of `browser_subprocess_path`:** When sandboxing is enabled on Windows, setting `CefSettings.browser_subprocess_path` is explicitly unsupported because the Chromium sandbox broker cannot initialize restricted child tokens across disparate executable images.
+3. **The Canonical Bootstrap Architecture:** To allow applications to maintain modular host architectures while enforcing strict sandboxing, CEF documents the **Bootstrap Architecture**:
+   - A lightweight entry point binary (`bootstrap.exe` > 4.3 MB) statically links `cef_sandbox.lib`.
+   - The application business logic is compiled as a dynamic library (`kage_client.dll`) exporting `RunWinMain` and `RunConsoleMain`.
+
+### KAGE Dual Execution Topology: Model A (Dev) vs. Model B (Release)
+
+KAGE intentionally supports two execution models to reconcile rapid developer turnaround with production sandbox security:
+
+| Architectural Property | Model A: Development & Diagnostic Profile | Model B: Production Release Package (`target/release/kage-bundle`) |
+|---|---|---|
+| **Primary Entry Executable** | `target\...\debug\kage-host.exe` | `KAGE.exe` (copied from official canonical `bootstrap.exe`) |
+| **Subprocess Executable** | `target\...\debug\kage-cef-subprocess.exe` | `KAGE.exe` (same binary; re-executed via `--type=*`) |
+| **`browser_subprocess_path`** | Set to `Some("kage-cef-subprocess.exe")` | Omitted / Empty (`None` or empty string) |
+| **`no_sandbox` Setting** | `true` (debug profile per `src-tauri/src/lib.rs#L59`) | `false` (enforced at build time per `CEF-03b-A`) |
+| **Bootstrap Entry Point** | Standard WinMain / Tauri application loop | `RunWinMain(hInstance, lpCmdLine, nCmdShow, sandbox_info, version_info)` exported by `kage_client.dll` |
+| **Sandbox Info Pointer** | `std::ptr::null_mut()` | Passed from `bootstrap.exe` into `RunWinMain`, then forwarded to `cef::initialize` |
+| **Renderer Process Isolation** | Unrestricted / Standard Medium Integrity (`TokenElevationTypeLimited`) | Chromium Sandbox Broker: Job Objects (`IsProcessInJob`), `TokenRestrictedSids`, `Untrusted` or `Low` integrity |
+
+### Execution Wiring in Production Model B (`KAGE.exe`)
+
+1. **Initialization:** User or OS launches `KAGE.exe`.
+2. **Broker Token Allocation:** `KAGE.exe` (`bootstrap.exe`) executes its embedded CRT entry point, calling Chromium's internal `cef_sandbox_info_create()` to construct the sandbox configuration tracker.
+3. **Dynamic Client Hand-Off:** `KAGE.exe` dynamically loads `kage_client.dll` and locates `RunWinMain`.
+4. **Subprocess Branch:** If the command-line arguments contain `--type=renderer`, `--type=gpu-process`, or `--type=utility`:
+   - `RunWinMain` invokes `cef::execute_process(args, app, sandbox_info)`.
+   - The child process runs under the constraints configured by the host broker and terminates upon completion, returning the process exit code directly.
+5. **Browser Host Branch:** If no `--type` argument is present (the main process):
+   - `RunWinMain` hands control to the KAGE Tauri runtime.
+   - `CefRuntime::initialize_cef()` constructs `Settings` with `browser_subprocess_path = ""` and `no_sandbox = false`.
+   - `cef::initialize(args, settings, app, sandbox_info)` is called, transferring the opaque sandbox pointer to Chromium.
+   - When CEF spawns renderers, it launches `KAGE.exe` with `--type=renderer`. The broker places the new child process into a dedicated Windows Job object, strips administrative and medium privileges, and assigns a restricted token.
+
+### Dissection of Physical Seal Output (`scripts/test_production_seal.ps1`)
+
+The empirical physical seal test was executed on the **Model A Debug binary**:
+`target\x86_64-pc-windows-msvc\debug\kage-host.exe` launching `kage-cef-subprocess.exe`.
+
+**Technical Audit of the Reported Token Evidence:**
+- **Medium Integrity & `TokenElevationTypeLimited`:** The physical log reports renderer and utility subprocesses running at Medium integrity with `TokenElevationTypeLimited`. In Windows access control, `TokenElevationTypeLimited` indicates a standard non-elevated split token under UAC; it does **not** indicate a Chromium restricted sandbox token. Because Model A explicitly runs with `no_sandbox = true` to facilitate developer debugging, Medium integrity is the expected operating state for this build.
+- **Definitive Evidence Established by this Test:** While this test does not prove renderer sandbox token attenuation, it provides definitive, unmocked physical validation of:
+  1. **Win32 Child-HWND Host Composition (`CEF-06C`):** Proves real HWND embedding (`GetParent(child) == parent`), child HWND 198768 (`Chrome_WidgetWin_1`) embedded within Tauri parent HWND 4655068.
+  2. **Win32 Window Clipping:** Confirms `WS_CLIPCHILDREN | WS_CLIPSIBLINGS` prevents overlapping render artifacts between React chrome and the CEF child window.
+  3. **Multi-Process Architecture:** Confirms 1 Host process, 1 WebView2 shell process, and 6 CEF subprocesses coordinate without deadlocks.
+  4. **Clean Teardown:** Confirms `PostMessage(WM_CLOSE)` cleanly terminates the entire process tree with zero orphaned processes.
+
+**Release Candidate Qualification Status:**
+- The Model B packaging structure (`target/release/kage-bundle`) has passed all 10 points of the `SandboxPackagingValidator` in the CI Package Gate (`tests/phase2d_sandbox_packaging.rs`), including static binary provenance, PE header analysis, and live child process job/restricted SID assertions.
+- Physical execution against the packaged Release Candidate binary (`target/release/kage-bundle/KAGE.exe`) to capture live `Untrusted` or `Low` token integrity levels is qualified as a prerequisite gate for the final signed installer release.
+
+---
+
+## 5. Native CEF Child Aperture Runtime & Clarified Layout Matrix (`INV-01`, `CEF-06`, `GATE-11-F`..`I`)
 
 ### Layout-Math Tests vs. Physical-Host E2E Distinction
 - **Layout-Math Integration Tests (`tests/phase11_native_aperture_runtime.rs`):** Validate coordinate geometry, multi-DPI bounds scaling, viewport rectangular math, and zero physical overlap assertions in software across **20 combinations**.
 - **Physical-Host E2E Tests (`scripts/test_production_seal.ps1`):** Validate real Windows desktop child-HWND creation, Win32 message pump ownership, Win32 window clipping (`WS_CLIPCHILDREN | WS_CLIPSIBLINGS`), and Tauri WebView2/CEF composition.
-- **Physical-Host Configurations Tested:** Physical Win32 desktop testing was executed on the packaged `kage-host.exe` at **nominal desktop bounds ($1280\times 800$, DPI 1.0x and 1.25x)**, verifying live child HWND hierarchy (`GetParent(child) == parent`), child window class `CefBrowserWindow` / `Chrome_WidgetWin_1`, process token elevation isolation (`TokenElevationTypeLimited`), and composition stability. The 20 geometry combinations in `GATE-11-F` provide pure arithmetic guarantees across all resolution/DPI envelopes.
+- **Physical-Host Configurations Tested:** Physical Win32 desktop testing was executed on the packaged `kage-host.exe` at **nominal desktop bounds ($1280\times 800$, DPI 1.0x and 1.25x)**, verifying live child HWND hierarchy (`GetParent(child) == parent`), child window class `CefBrowserWindow` / `Chrome_WidgetWin_1`, and composition stability. The 20 geometry combinations in `GATE-11-F` provide pure arithmetic guarantees across all resolution/DPI envelopes.
 
-### Empirical Physical-Host Seal Test Output (`scripts/test_production_seal.ps1`)
+### Empirical Physical-Host Seal Test Output: Development-Profile Composition (`scripts/test_production_seal.ps1`)
 ```text
 ================================================================================
-         KAGE PRODUCTION HOST PHYSICAL SEAL: CEF-06C & CEF-03b-C                
+    KAGE DEVELOPMENT HOST PHYSICAL SEAL: CEF-06C COMPOSITION (DEBUG BINARIES)   
 ================================================================================
 [1/6] Binary Artifacts Verified:
   -> Host: target\x86_64-pc-windows-msvc\debug\kage-host.exe
@@ -194,7 +251,7 @@ The test suite validates five distinct concurrency gates plus the full UI-to-run
   -> PostMessage(WM_CLOSE) dispatched to HWND 4655068
   -> Host process cleanly terminated; zero orphaned KAGE / CEF processes remain. Clean exit verified.
 ================================================================================
-              PRODUCTION HOST PHYSICAL SEAL VALIDATION COMPLETE                 
+      DEVELOPMENT HOST PHYSICAL SEAL: CEF-06C COMPOSITION VALIDATION COMPLETE   
 ================================================================================
 ```
 
@@ -233,7 +290,7 @@ Four transitions are explicitly exercised:
 
 ---
 
-## 5. Supervisory HUD: Outcomes, Recovery Decisions & Complete Trace Lineage
+## 6. Supervisory HUD: Outcomes, Recovery Decisions & Complete Trace Lineage
 
 ### Separated Outcome vs. Recovery Badges
 - **Verification Outcome:** `PASS` (Green), `FAIL` (Red), `UNKNOWN` (Amber). Represents empirical evaluation of postconditions against the DOM baseline.
@@ -271,7 +328,7 @@ In `src-ui/src/components/AISidebar/AISidebar.tsx`:
 
 ---
 
-## 6. Canonical Contract Status Table (v0.4.1)
+## 7. Canonical Contract Status Table (v0.4.1)
 
 ```
 ================================================================================
@@ -296,14 +353,14 @@ In `src-ui/src/components/AISidebar/AISidebar.tsx`:
   CEF-02:    Dedicated subprocess helper launch & topology [VERIFIED (SUBPROC-01 + PHASE 2B)]
   CEF-03b-A: Sandbox compile prohibition enforced          [VERIFIED (STATIC+CFG)]
   CEF-03b-B: Runtime sandbox requested in release config   [VERIFIED (RUNTIME CONFIG)]
-  CEF-03b-C: Renderer process token/ACL sandbox proof      [VERIFIED (PHYSICAL HOST E2E)]
-  CEF-03b-D: CEF 152 Release Sandbox Packaging Gate        [VERIFIED (10-POINT EMPIRICAL)]
+  CEF-03b-C: Renderer process token/ACL sandbox proof      [VERIFIED IN CI PACKAGE GATE; PHYSICAL RC QUALIFICATION PENDING]
+  CEF-03b-D: CEF 152 Release Sandbox Packaging Gate        [VERIFIED (10-POINT EMPIRICAL; RELEASE RC QUALIFICATION PENDING)]
   CEF-04A:   Multi-threaded loop setting configured        [VERIFIED (STATIC)]
   CEF-04B:   TID_UI thread affinity & CefPostTask hop      [VERIFIED (INTEGRATION)]
   CEF-05:    Native child HWND creation & attachment       [VERIFIED (INTEGRATION + GATE-11-H + PHASE 2B)]
   CEF-06A:   Layout math (zero physical bounds overlap)    [VERIFIED (INTEGRATION)] (5 sizes x 4 DPI = 20 combinations)
   CEF-06B:   Real CEF child HWND created & placed          [VERIFIED (INTEGRATION)]
-  CEF-06C:   Real Tauri WebView2 + CEF host composition    [VERIFIED (PHYSICAL HOST E2E)] (test_production_seal.ps1)
+  CEF-06C:   Real Tauri WebView2 + CEF host composition    [VERIFIED (PHYSICAL HOST E2E - DEV PROFILE)] (test_production_seal.ps1)
   CEF-SM:    Engine state machine lifecycle transitions    [VERIFIED (INTEGRATION)] (BrowserCreationAllowed)
   Executor-A:CefUiExecutor channel abstraction             [VERIFIED (INTEGRATION)]
   Executor-B:Actual CefPostTask(TID_UI) real hop           [VERIFIED (INTEGRATION)]
@@ -317,7 +374,7 @@ In `src-ui/src/components/AISidebar/AISidebar.tsx`:
     PHASE 2A — CEF Engine Infrastructure:          SEALED (100%)
     PHASE 2B — Real CEF Lifecycle:                 SEALED (100%)
     PHASE 2C — Production Tauri + CEF Composition: SEALED (100%)
-    PHASE 2D — CEF 152 Sandbox Release Packaging:  SEALED (100%)
+    PHASE 2D — CEF 152 Sandbox Release Packaging:  CI PACKAGING PASSED (RELEASE RC QUALIFICATION PENDING)
     PHASE 3  — Browser Lifecycle & Control Plane:  SEALED (100%)
     PHASE 4  — Empirical CDP DevTools Protocol:    SEALED (100%)
     PHASE 5  — Live Telemetry & Context Streaming: SEALED (100%)
@@ -327,7 +384,7 @@ In `src-ui/src/components/AISidebar/AISidebar.tsx`:
     PHASE 9  — Autonomous Agent Runtime & Context: SEALED (100%)
     PHASE 10 — Verified Autonomy, STOP & Recovery: SEALED (100%)
     PHASE 11 — KAGE MVP Release & Hardened Shell:  SEALED (100%)
-    OVERALL PHASE 2: SEALED (100%)
+    OVERALL PHASE 2: CORE IMPLEMENTATION VERIFIED (RELEASE RC QUALIFICATION PENDING)
     OVERALL PHASE 3: SEALED (100%)
     OVERALL PHASE 4: SEALED (100%)
     OVERALL PHASE 5: SEALED (100%)
@@ -339,28 +396,38 @@ In `src-ui/src/components/AISidebar/AISidebar.tsx`:
     OVERALL PHASE 11:SEALED (100%)
     EVAL_JS GOVERNANCE IMPLEMENTATION:             COMPLETE (100%)
     INV-02 GOVERNANCE PIPELINE:                    VERIFIED (INTEGRATION + REAL CEF E2E)
-    PHASE 1-11 CONTROL PLANE CAPABILITIES:         SEALED & COMPLETE (v0.4.1 Release Ready)
-    FULL KAGE AUTONOMOUS AGENT CONTROL PLANE:      VERIFIED (Milestone 11 Sealed)
+    PHASE 1-11 CORE IMPLEMENTATION:                COMPLETE (v0.4.1; RELEASE QUALIFICATION PENDING)
+    FULL KAGE AUTONOMOUS AGENT CONTROL PLANE:      VERIFIED (Milestone 11 Complete)
 ================================================================================
-[SUCCESS] All Phase 1 through 11 Active Architecture Contracts verified by the assigned mechanism and SEALED (100%). Ready for v1.0.0 Alpha.
+[SUCCESS] All core implementation gates passed; release-candidate sandbox qualification pending.
 ```
 
 ---
 
-## 7. Final Milestone Decision
+## 8. Final Milestone Decision
 
-**Architecture Review:** Sealed (v0.4.1)  
-**Milestone Status:** Phase 11 Sealed · **v1.0.0 Alpha Release-Ready**
+**Architecture Review:** Implementation Verified (v0.4.1)  
+**Milestone Status:** Phase 11 Implementation Complete · **Release Seal Pending Packaging of Signed Release Candidate (Model B Bootstrap Qualification)**
 
-### Phase 11 Acceptance Checklist Tracker (All 6 Confirmed & Qualified)
+### Milestone Reconciliation Ledger
+
+| Scope | Reconciled Status | Evidence & Verification Path |
+|---|---|---|
+| **Core Architecture & Functional Implementation** | **Complete (100%)** | All invariants `INV-01`..`INV-12`, STOP linearization (`GATE-11-A`..`E`), and HUD dispatch fully passing in automated test suites |
+| **Development-Profile Native CEF Composition** | **Verified** | Verified on live Win32 desktop via `test_production_seal.ps1` (Model A Debug binary: HWND 4655068, child CEF HWND 198768, 6 auxiliary CEF subprocesses, clean zero-orphan teardown) |
+| **Automated Sandbox Packaging Checks** | **Passed** | 10-point checklist & 6-case fail-closed negative security suite passed in CI gate (`phase2d_sandbox_packaging.rs`) |
+| **Signed Release-Candidate Sandbox Qualification** | **Pending** | Requires physical execution of Model B packaged binary (`target/release/kage-bundle/KAGE.exe`) to capture live `Untrusted`/`Low` token integrity |
+| **Final v1.0.0 Alpha Release Seal** | **Pending** | Withheld until Model B physical qualification completes against the signed release package |
+
+### Phase 11 Implementation Acceptance Tracker
 
 | Item | Requirement | Status | Verification Gate & Mechanism Evidence |
 |---|---|---|---|
-| 1 | Canonical invariants and CEF contracts reconciled | **Confirmed & Sealed** | `INV-01..12` + `CEF-01..06` reconciled in status table; explicit `CEF-02` (Dedicated Subprocess) & `CEF-05` (Native Child HWND) verified by assigned mechanism (Static, Integration, Physical E2E) |
+| 1 | Canonical invariants and CEF contracts reconciled | **Confirmed Complete** | `INV-01..12` + `CEF-01..06` reconciled in status table; explicit `CEF-02` (Separate Subprocess in Dev / Unified Bootstrap with Client DLL in Release), `CEF-05` (Native Child HWND), and `CEF-03b-C/D` (CI Package Gate verified; physical release candidate qualification pending) |
 | 2 | STOP linearization and task isolation | **Confirmed & Sealed** | `GATE-11-A..C`: Atomic linearization point closes new dispatch; in-flight settles cleanly; concurrent tasks isolated |
 | 3 | GATE-11-E Takeover Resumption Lineage & Fresh Observation | **Confirmed & Sealed** | `GATE-11-E`: Automated Native Test Harness executing on real Chromium subsystem (`TabManager` + `CdpBroker` + `PageClickTool`), controlled sandbox endpoint `https://test.kage.dev/checkout-lab`, native form entry, AX tree textbox/button state, network quiescence, fresh observation `obs_fresh_resync_takeover_8821`, fresh hash `sha256:92fd05b...`, verifier `PASS` |
 | 4 | HUD-to-runtime command dispatch boundary integration | **Confirmed & Sealed** | Command-Dispatch Integration Test (Tauri Invoke Wire Protocol Envelope): `dispatch_ipc_command` tests `task_stop`, `task_takeover`, `task_resume` JSON payloads across Tauri IPC boundary governing ToolBus denials and admissions |
-| 5 | Native layout math vs. physical-host desktop seal clearly separated | **Confirmed & Sealed** | Explicitly separated: 20 geometry combinations ($5\times 4$) tested in software math (`GATE-11-F`); physical Win32 desktop child-HWND composition and process tokens validated via `scripts/test_production_seal.ps1` (HWND 4655068, child CEF HWND 198768, 6 auxiliary CEF subprocesses, clean zero-orphan exit) |
-| 6 | Reproducible CI results tied to the release commit | **Confirmed & Sealed** | Release Commit `2373c448c23dbcc1e728655cd94104cde1c48e74` verified with `python scripts/verify_contracts.py` (100% active contracts passing by assigned mechanism) |
+| 5 | Native layout math vs. physical-host desktop seal clearly separated | **Confirmed Complete** | Explicitly separated: 20 geometry combinations ($5\times 4$) tested in software math (`GATE-11-F`); physical Win32 desktop child-HWND composition validated via `scripts/test_production_seal.ps1` (Model A Debug binary: HWND 4655068, child CEF HWND 198768, 6 auxiliary CEF subprocesses, clean zero-orphan exit). True renderer sandbox isolation token qualification is deferred to the Model B packaged Release Candidate |
+| 6 | Reproducible CI results tied to the release commit | **Confirmed Complete** | Release Commit `2373c448c23dbcc1e728655cd94104cde1c48e74` verified with `python scripts/verify_contracts.py` (All core implementation gates passed) |
 
-All review conditions are completely satisfied with qualified, defensible empirical proof. KAGE v0.4.1 is fully sealed and ready for the v1.0.0 Alpha release.
+Phase 11 core implementation is 100% complete across all functional, architectural, IPC boundary, and concurrency linearization requirements. The unconditional final Alpha release seal is held pending the live empirical sandbox qualification of the Model B release package candidate (`target\release\kage-bundle\KAGE.exe`).

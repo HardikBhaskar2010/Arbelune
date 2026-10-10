@@ -92,7 +92,7 @@ def check_cef_03b_sandbox_gate():
         print("[FAIL] CEF-03b: KAGE_DISABLE_CEF_SANDBOX is set in this environment.")
         print(f"       Value: '{val}' — this is forbidden in CI and automated verification.")
         return False
-    print("[PASS] CEF-03b: KAGE_DISABLE_CEF_SANDBOX is not set — sandbox enforced.")
+    print("[PASS] Sandbox override environment check: KAGE_DISABLE_CEF_SANDBOX is unset.")
     return True
 
 def check_cef_01_runtime_validated_before_builder():
@@ -755,7 +755,7 @@ def main():
     print("    PHASE 2A — CEF Engine Infrastructure:          SEALED (100%)")
     print("    PHASE 2B — Real CEF Lifecycle:                 SEALED (100%)")
     print("    PHASE 2C — Production Tauri + CEF Composition: SEALED (100%)")
-    print(f"    PHASE 2D — CEF 152 Sandbox Release Packaging:  {'SEALED (100%)' if cef_03b_d_ok else 'PENDING'}")
+    print(f"    PHASE 2D — CEF 152 Sandbox Release Packaging:  {'CI PACKAGING PASSED (RELEASE RC QUALIFICATION PENDING)' if cef_03b_d_ok else 'PENDING'}")
     print(f"    PHASE 3  — Browser Lifecycle & Control Plane:  {'SEALED (100%)' if phase3_e2e_ok else 'PENDING'}")
     print(f"    PHASE 4  — Empirical CDP DevTools Protocol:    {'SEALED (100%)' if phase4_cdp_ok else 'PENDING'}")
     print(f"    PHASE 5  — Live Telemetry & Context Streaming: {'SEALED (100%)' if phase5_telemetry_ok else 'PENDING'}")
@@ -765,7 +765,7 @@ def main():
     print(f"    PHASE 9  — Autonomous Agent Runtime & Context: {'SEALED (100%)' if phase9_agent_ok else 'PENDING'}")
     print(f"    PHASE 10 — Verified Autonomy, STOP & Recovery: {'SEALED (100%)' if phase10_verified_ok else 'PENDING'}")
     print(f"    PHASE 11 — KAGE MVP Release & Hardened Shell:  {'SEALED (100%)' if phase11_stop_ok and phase11_aperture_ok else 'PENDING'}")
-    print(f"    OVERALL PHASE 2: {'SEALED (100%)' if (phase2b_ok and cef_03b_d_ok) else 'PRODUCTION-FUNCTIONALLY COMPLETE'}")
+    print(f"    OVERALL PHASE 2: {'CORE IMPLEMENTATION VERIFIED (RELEASE RC QUALIFICATION PENDING)' if (phase2b_ok and cef_03b_d_ok) else 'PRODUCTION-FUNCTIONALLY COMPLETE'}")
     print(f"    OVERALL PHASE 3: {'SEALED (100%)' if phase3_e2e_ok else 'PENDING'}")
     print(f"    OVERALL PHASE 4: {'SEALED (100%)' if phase4_cdp_ok else 'PENDING'}")
     print(f"    OVERALL PHASE 5: {'SEALED (100%)' if phase5_telemetry_ok else 'PENDING'}")
@@ -777,12 +777,12 @@ def main():
     print(f"    OVERALL PHASE 11:{'SEALED (100%)' if phase11_stop_ok and phase11_aperture_ok else 'PENDING'}")
     print("    EVAL_JS GOVERNANCE IMPLEMENTATION:             COMPLETE (100%)")
     print(f"    INV-02 GOVERNANCE PIPELINE:                    {'VERIFIED (INTEGRATION + REAL CEF E2E)' if inv_02_ok and phase4_cdp_ok else 'PENDING'}")
-    print("    PHASE 1-11 CONTROL PLANE CAPABILITIES:         SEALED & COMPLETE (v0.4.1 Release Ready)")
+    print("    PHASE 1-11 CORE IMPLEMENTATION:                COMPLETE (v0.4.1; RELEASE QUALIFICATION PENDING)")
     print("    FULL KAGE AUTONOMOUS AGENT CONTROL PLANE:      VERIFIED (Milestone 11 Complete)")
     print("=" * 80)
 
     if all_active_passed:
-        print("[SUCCESS] All Phase 1 through 11 Core Implementation Contracts verified by the assigned mechanism. Phase 11 Implementation Complete (Release Candidate Sandbox Qualification Pending).")
+        print("[SUCCESS] All core implementation gates passed; release-candidate sandbox qualification pending.")
         sys.exit(0)
     else:
         print("[FAILED] Architecture Contract Violations Detected in Active Gates!")

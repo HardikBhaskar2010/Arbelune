@@ -11,7 +11,7 @@
 
 ---
 
-## 1. Visual Philosophy & Aesthetic Identity
+## <img src="../../public/icons/layers.svg" width="20" height="20" align="absmiddle" /> 1. Visual Philosophy & Aesthetic Identity
 
 KAGE rejects the tired visual cliches of early developer tools—dense, cluttered, dark cyberpunk HUDs dominated by neon purple and harsh cyan borders.
 
@@ -30,6 +30,10 @@ Instead, KAGE embodies a distinct, state-of-the-art aesthetic:
 │ ambient glow.     │ clutter or fatigue│ mechanical craft.              │
 └───────────────────┴───────────────────┴────────────────────────────────┘
 ```
+
+<p align="center">
+  <img src="../../public/Design System.png" alt="Liquid Glass Design System Token Palette" width="100%" />
+</p>
 
 ---
 
@@ -175,7 +179,7 @@ KAGE enforces a strict two-family typography system:
 
 ---
 
-## 7. Core Component Specifications
+## <img src="../../public/icons/monitor.svg" width="20" height="20" align="absmiddle" /> 7. Core Component Specifications
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -192,6 +196,14 @@ KAGE enforces a strict two-family typography system:
 │  [Tests]     │                               │              │
 └──────────────┴───────────────────────────────┴──────────────┘
 ```
+
+<p align="center">
+  <img src="../../public/Mockup_New Tab Screen.png" alt="KAGE New Tab Command Center" width="100%" />
+</p>
+
+<p align="center">
+  <img src="../../public/Mockup_Browsing Screen.png" alt="KAGE Live Browsing Workstation" width="100%" />
+</p>
 
 - **Tab Strip:** Height 36px. Active tab styled in `--kage-accent` with soft glow.
 - **Omnibox:** Height 38px. Semi-transparent input with focus glow in `--kage-border-highlight`.
