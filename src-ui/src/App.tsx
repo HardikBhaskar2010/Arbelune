@@ -221,11 +221,11 @@ const AppInner: React.FC = () => {
   const isNewTab = !activeTab?.url && activeTool !== "settings" && activeTool !== "extensions";
 
   return (
-    <div className="app" role="application" aria-label="KAGE Developer Browser">
+    <div className="app" role="application" aria-label="Arbelune Developer Browser">
       {/* ── Top Bar: Logo + Tabs + Window Controls ───────────────── */}
       <header className="app__titlebar glass-panel" role="banner">
-        <div className="app__titlebar-logo" aria-label="KAGE" onClick={() => navigate("")}>
-          <img src="/kage-logo.png" alt="KAGE" className="app__titlebar-logo-img" />
+        <div className="app__titlebar-logo" aria-label="Arbelune" onClick={() => navigate("")}>
+          <img src="/arbelune-icon.png" alt="Arbelune" className="app__titlebar-logo-img" />
         </div>
         <TabStrip
           tabs={tabs.map((t) => ({
