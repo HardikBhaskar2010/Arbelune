@@ -46,7 +46,7 @@ export const DevToolsDrawer: React.FC = () => {
   return (
     <section
       className={`devtools-drawer ${devToolsOpen ? "devtools-drawer--open" : "devtools-drawer--closed"} ${isExpanded ? "devtools-drawer--expanded" : ""}`}
-      aria-label="KAGE Developer Tools Suite"
+      aria-label="Arbelune Developer Tools Suite"
       aria-hidden={!devToolsOpen}
     >
       {/* ── Tabs & Window Bar ──────────────────────────────────── */}

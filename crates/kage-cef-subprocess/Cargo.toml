@@ -7,9 +7,17 @@ license.workspace = true
 repository.workspace = true
 description = "Minimal helper binary for CEF renderer, GPU, and utility subprocesses"
 
+[lib]
+name = "kage_cef_subprocess"
+path = "src/lib.rs"
+
+[[bin]]
+name = "arbelune-cef-subprocess"
+path = "src/main.rs"
+
 [[bin]]
 name = "kage-cef-subprocess"
-path = "src/main.rs"
+path = "src/legacy_main.rs"
 
 [dependencies]
 cef = { workspace = true }

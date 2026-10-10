@@ -321,14 +321,14 @@ export const AISidebar: React.FC<AISidebarProps> = ({
   return (
     <aside
       className={`ai-sidebar ${isOpen ? "ai-sidebar--open" : ""}`}
-      aria-label="KAGE Autonomous Agent HUD"
+      aria-label="Arbelune Autonomous Agent HUD"
       aria-hidden={!isOpen}
       id="ai-sidebar"
     >
       {/* ── Header ────────────────────────────────────────────── */}
       <div className="ai-sidebar__header">
         <div className="ai-sidebar__header-title">
-          <img src="/kage-logo.png" alt="KAGE" className="ai-sidebar__header-logo" />
+          <img src="/arbelune-icon.png" alt="Arbelune" className="ai-sidebar__header-logo" />
           <span className="ai-sidebar__header-ai">AGENT HUD</span>
         </div>
         <button
@@ -401,7 +401,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
         {/* ── Copilot Profile Card ─────────────────────────────── */}
         <div className="ai-copilot-card">
           <div className="ai-copilot-card__avatar-wrap">
-            <img src="/avatar.png" alt="Kage AI Avatar" className="ai-copilot-card__avatar" />
+            <img src="/arbelune-avatar.png" alt="Arbelune AI Avatar" className="ai-copilot-card__avatar" />
             <span
               className={`ai-copilot-card__status-dot ${taskState === "EXECUTING" ? "ai-copilot-card__status-dot--active" : ""}`}
               title={taskState}
@@ -433,7 +433,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
             {messages.map((m) => (
               <div key={m.id} className={`ai-chat-bubble ai-chat-bubble--${m.role}`}>
                 <span className="ai-chat-bubble__sender">
-                  {m.role === "assistant" ? "Kage Agent" : m.role === "system" ? "Control Plane" : "You"}
+                  {m.role === "assistant" ? "Arbelune Agent" : m.role === "system" ? "Control Plane" : "You"}
                 </span>
 
                 {/* Telemetry Trace with distinct Lineage & Separated Outcome/Recovery Badges */}
@@ -499,7 +499,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
             {isThinking && (
               <div className="ai-chat-bubble ai-chat-bubble--assistant" style={{ position: "relative", overflow: "hidden" }}>
                 <BorderBeam size={160} duration={8} colorFrom="#FFA5AB" colorTo="#DA627D" />
-                <span className="ai-chat-bubble__sender">Kage Agent</span>
+                <span className="ai-chat-bubble__sender">Arbelune Agent</span>
                 <div className="ai-thinking-indicator">
                   <span /><span /><span />
                 </div>
@@ -514,7 +514,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
           <>
             <div className="ai-intro-section">
               <p className="ai-intro-section__greeting">
-                KAGE Autonomous Agent HUD<br />
+                Arbelune Autonomous Agent HUD<br />
                 Ready to coordinate governed browser actions:
               </p>
               <ul className="ai-capabilities-list">
@@ -560,7 +560,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
           <textarea
             id={inputId}
             className="ai-input-capsule__textarea"
-            placeholder={taskState === "STOPPED" ? "Task stopped. Click Reset to start again." : "Instruct KAGE agent or ask about page state..."}
+            placeholder={taskState === "STOPPED" ? "Task stopped. Click Reset to start again." : "Instruct Arbelune agent or ask about page state..."}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}

@@ -84,22 +84,47 @@ pub fn run() {
     let surface_manager = Arc::new(NativeSurfaceManager::new(ChromeLayoutConfig::default()));
 
     // -----------------------------------------------------------------------
-    // Determine audit database location (%LOCALAPPDATA%\KAGE\security_audit.db)
+    // Determine audit database location (%LOCALAPPDATA%\Arbelune\security_audit.db)
+    // with automatic, non-destructive migration from legacy %LOCALAPPDATA%\KAGE
     // -----------------------------------------------------------------------
-    let audit_path = if let Ok(custom) = std::env::var("KAGE_AUDIT_DB") {
+    let audit_path = if let Ok(custom) = std::env::var("ARBELUNE_AUDIT_DB").or_else(|_| std::env::var("KAGE_AUDIT_DB")) {
         std::path::PathBuf::from(custom)
     } else if let Ok(local_app_data) = std::env::var("LOCALAPPDATA") {
-        let mut dir = std::path::PathBuf::from(local_app_data);
-        dir.push("KAGE");
-        let _ = std::fs::create_dir_all(&dir);
-        dir.push("security_audit.db");
-        dir
+        let base_dir = std::path::PathBuf::from(local_app_data);
+        let arbelune_dir = base_dir.join("Arbelune");
+        let legacy_dir = base_dir.join("KAGE");
+        let _ = std::fs::create_dir_all(&arbelune_dir);
+        let arbelune_db = arbelune_dir.join("security_audit.db");
+        let legacy_db = legacy_dir.join("security_audit.db");
+        if !arbelune_db.exists() && legacy_db.exists() {
+            tracing::info!("Migrating legacy audit DB from {:?} to {:?}", legacy_db, arbelune_db);
+            if let Err(e) = std::fs::copy(&legacy_db, &arbelune_db) {
+                tracing::warn!("Failed to copy legacy audit DB: {e}; falling back to legacy DB path");
+                legacy_db
+            } else {
+                arbelune_db
+            }
+        } else {
+            arbelune_db
+        }
     } else if let Ok(home) = std::env::var("USERPROFILE").or_else(|_| std::env::var("HOME")) {
-        let mut dir = std::path::PathBuf::from(home);
-        dir.push(".kage");
-        let _ = std::fs::create_dir_all(&dir);
-        dir.push("security_audit.db");
-        dir
+        let base_dir = std::path::PathBuf::from(home);
+        let arbelune_dir = base_dir.join(".arbelune");
+        let legacy_dir = base_dir.join(".kage");
+        let _ = std::fs::create_dir_all(&arbelune_dir);
+        let arbelune_db = arbelune_dir.join("security_audit.db");
+        let legacy_db = legacy_dir.join("security_audit.db");
+        if !arbelune_db.exists() && legacy_db.exists() {
+            tracing::info!("Migrating legacy audit DB from {:?} to {:?}", legacy_db, arbelune_db);
+            if let Err(e) = std::fs::copy(&legacy_db, &arbelune_db) {
+                tracing::warn!("Failed to copy legacy audit DB: {e}; falling back to legacy DB path");
+                legacy_db
+            } else {
+                arbelune_db
+            }
+        } else {
+            arbelune_db
+        }
     } else {
         std::path::PathBuf::from("security_audit.db")
     };
@@ -184,6 +209,7 @@ pub fn run() {
                 tauri::async_runtime::spawn(async move {
                     use tauri::Emitter;
                     while let Ok(event) = event_rx.recv().await {
+                        let _ = app_handle.emit("arbelune:browser:event", &event);
                         if let Err(e) = app_handle.emit("kage:browser:event", &event) {
                             tracing::error!("Failed to emit kage:browser:event to UI: {e}");
                         }
@@ -318,5 +344,5 @@ pub fn run() {
             ipc::task_resume,
         ])
         .run(tauri::generate_context!())
-        .expect("KAGE Tauri application failed to start");
+        .expect("Arbelune Tauri application failed to start");
 }

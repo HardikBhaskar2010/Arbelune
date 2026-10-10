@@ -1,8 +1,8 @@
-# Contributing to KAGE (影)
+# Contributing to Arbelune
 
-Thank you for your interest in contributing to **KAGE (影)** — a governed browser runtime for AI agents, with controlled actions, verified outcomes, and human takeover!
+Thank you for your interest in contributing to **Arbelune** — a governed browser runtime for AI agents, with controlled actions, verified outcomes, and human takeover!
 
-KAGE is an ambitious open-source project uniting native Chromium rendering, high-velocity DevTools, and permission-governed autonomous agent intelligence. We welcome contributions ranging from bug fixes and documentation to new developer tools, agent SDK adapters, and engine improvements.
+Arbelune is an ambitious open-source project uniting native Chromium rendering, high-velocity DevTools, and permission-governed autonomous agent intelligence. We welcome contributions ranging from bug fixes and documentation to new developer tools, agent SDK adapters, and engine improvements.
 
 Before contributing, we encourage reviewing our [Adoption Strategy](docs/01-product/Adoption_Strategy.md) and trying the [90-Second Demo Guide](docs/01-product/Demo_Guide.md).
 
@@ -39,8 +39,8 @@ Before submitting any code, please review our foundational architecture in [`doc
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/HardikBhaskar2010/Kage.git
-cd Kage
+git clone https://github.com/HardikBhaskar2010/Arbelune.git
+cd Arbelune
 ```
 
 ### 2. Install UI Dependencies
@@ -63,8 +63,8 @@ npm run tauri dev
 
 ## 4. Execution Topologies (Dev vs. Release)
 
-* **Model A (Development & Debug):** Uses a separate subprocess executable (`kage-cef-subprocess.exe`) with `no_sandbox = true` for high-velocity local debugging, WinDbg symbols, and hot-reloading.
-* **Model B (Production Release):** Uses a single unified `KAGE.exe` bootstrap executable linking `cef_sandbox.lib` forwarding to `kage_client.dll`. The browser and child processes share the same executable with Chromium sandbox token restrictions enforced.
+* **Model A (Development & Debug):** Uses a separate subprocess executable (`arbelune-cef-subprocess.exe`) with `no_sandbox = true` for high-velocity local debugging, WinDbg symbols, and hot-reloading.
+* **Model B (Production Release):** Uses a single unified `Arbelune.exe` bootstrap executable linking `cef_sandbox.lib` forwarding to `arbelune_client.dll`. The browser and child processes share the same executable with Chromium sandbox token restrictions enforced.
 
 ---
 

@@ -1,15 +1,19 @@
-# KAGE Production Release Packaging Script (CEF-03b-D)
+# Arbelune Production Release Packaging Script (CEF-03b-D)
 # Assembles the canonical 18-asset CEF 152 release redistribution bundle
 param(
-    [string]$OutputDir = "$PSScriptRoot\..\target\release\kage-bundle",
-    [string]$CefDir = $env:KAGE_CEF_DIR,
+    [string]$OutputDir = "$PSScriptRoot\..\target\release\arbelune-bundle",
+    [string]$CefDir = $env:ARBELUNE_CEF_DIR,
     [string]$Validate = "true"
 )
+
+if (-not $CefDir) {
+    $CefDir = $env:KAGE_CEF_DIR
+}
 
 $ErrorActionPreference = "Stop"
 
 Write-Host "================================================================================" -ForegroundColor Cyan
-Write-Host "            KAGE PRODUCTION RELEASE PACKAGING & CEF BUNDLE (CEF-03b-D)          " -ForegroundColor Cyan
+Write-Host "           ARBELUNE PRODUCTION RELEASE PACKAGING & CEF BUNDLE (CEF-03b-D)       " -ForegroundColor Cyan
 Write-Host "================================================================================" -ForegroundColor Cyan
 
 # 1. Discover CEF distribution directory if not provided
@@ -104,17 +108,18 @@ if (Test-Path $srcLocales) {
 }
 
 # 6. Copy and package bootstrap architecture binaries
-# KAGE.exe is the packaged bootstrap.exe linking cef_sandbox.lib
+# Arbelune.exe is the packaged bootstrap.exe linking cef_sandbox.lib
 $srcBootstrap = Join-Path $CefDir "bootstrap.exe"
 if (Test-Path $srcBootstrap) {
     Copy-Item -Path $srcBootstrap -Destination (Join-Path $OutputDir "bootstrap.exe") -Force
+    Copy-Item -Path $srcBootstrap -Destination (Join-Path $OutputDir "Arbelune.exe") -Force
     Copy-Item -Path $srcBootstrap -Destination (Join-Path $OutputDir "KAGE.exe") -Force
-    Write-Host "[+] Packaged bootstrap.exe and KAGE.exe (links cef_sandbox.lib)" -ForegroundColor Green
+    Write-Host "[+] Packaged bootstrap.exe, Arbelune.exe, and KAGE.exe (links cef_sandbox.lib)" -ForegroundColor Green
 } else {
     Write-Warning "bootstrap.exe missing in CEF distribution: $srcBootstrap"
 }
 
-# 7. Package KAGE client library (kage_client.dll, KAGE.dll, bootstrap.dll)
+# 7. Package Arbelune client library (arbelune_client.dll, kage_client.dll, bootstrap.dll)
 $targetRoots = @(
     "$PSScriptRoot\..\target\x86_64-pc-windows-msvc\release",
     "$PSScriptRoot\..\target\release",
@@ -125,21 +130,26 @@ $targetRoots = @(
 $clientDllFound = $false
 foreach ($root in $targetRoots) {
     $clientDll = Join-Path $root "kage_client.dll"
+    if (-not (Test-Path $clientDll)) {
+        $clientDll = Join-Path $root "arbelune_client.dll"
+    }
     if (Test-Path $clientDll) {
+        Copy-Item -Path $clientDll -Destination (Join-Path $OutputDir "arbelune_client.dll") -Force
         Copy-Item -Path $clientDll -Destination (Join-Path $OutputDir "kage_client.dll") -Force
+        Copy-Item -Path $clientDll -Destination (Join-Path $OutputDir "Arbelune.dll") -Force
         Copy-Item -Path $clientDll -Destination (Join-Path $OutputDir "KAGE.dll") -Force
         Copy-Item -Path $clientDll -Destination (Join-Path $OutputDir "bootstrap.dll") -Force
-        Write-Host "[+] Packaged kage_client.dll (and KAGE.dll, bootstrap.dll) from $root" -ForegroundColor Green
+        Write-Host "[+] Packaged arbelune_client.dll, kage_client.dll (and Arbelune.dll, bootstrap.dll) from $root" -ForegroundColor Green
         $clientDllFound = $true
         break
     }
 }
 if (-not $clientDllFound) {
-    Write-Warning "kage_client.dll not found in target directories. Build crates/kage-client first."
+    Write-Warning "Client library not found in target directories. Build crates/kage-client first."
 }
 
 # Purge legacy binaries that violate canonical packaging architecture
-$legacyBinaries = @("kage-cef-subprocess.exe", "kage-host.exe")
+$legacyBinaries = @("arbelune-cef-subprocess.exe", "kage-cef-subprocess.exe", "arbelune-host.exe", "kage-host.exe")
 foreach ($legacy in $legacyBinaries) {
     $legacyPath = Join-Path $OutputDir $legacy
     if (Test-Path $legacyPath) {

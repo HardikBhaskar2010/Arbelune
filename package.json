@@ -1,5 +1,5 @@
 {
-  "name": "kage-workspace",
+  "name": "arbelune-workspace",
   "version": "0.4.1",
   "private": true,
   "description": "A governed browser runtime for AI agents, with controlled actions, verified outcomes, and human takeover.",

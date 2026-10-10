@@ -244,7 +244,7 @@ export const NewTab: React.FC<NewTabProps> = ({ onNavigate, onToggleAi }) => {
         {/* Main Logo Only — No center text replacement */}
         <div className="new-tab__hero">
           <div className="new-tab__logo-wrap">
-            <img src="/Logo.png" alt="KAGE" className="new-tab__logo-img" />
+            <img src="/arbelune-logo.png" alt="Arbelune" className="new-tab__logo-img" />
           </div>
         </div>
 
@@ -268,7 +268,7 @@ export const NewTab: React.FC<NewTabProps> = ({ onNavigate, onToggleAi }) => {
               className="new-tab__search-input"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search the web or ask Kage AI…"
+              placeholder="Search the web or ask Arbelune AI…"
               aria-label="Search or enter a URL"
               autoFocus
               spellCheck={false}
@@ -279,8 +279,8 @@ export const NewTab: React.FC<NewTabProps> = ({ onNavigate, onToggleAi }) => {
                 type="button"
                 className="new-tab__search-action-btn new-tab__search-ai-btn"
                 onClick={onToggleAi}
-                aria-label="Ask Kage AI"
-                title="Ask Kage AI"
+                aria-label="Ask Arbelune AI"
+                title="Ask Arbelune AI"
               >
                 <Sparkles size={16} strokeWidth={2} />
               </button>
@@ -323,7 +323,7 @@ export const NewTab: React.FC<NewTabProps> = ({ onNavigate, onToggleAi }) => {
       </div>
 
       {/* ── Bottom-Right Motto Card ───────────────────────────────── */}
-      <footer className="new-tab__bottom-right" aria-label="KAGE Motto">
+      <footer className="new-tab__bottom-right" aria-label="Arbelune Motto">
         <span className="new-tab__motto-badge">
           A FASTER WEB FOR A BRIGHTER TOMORROW.
         </span>

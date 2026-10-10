@@ -11,7 +11,7 @@ interface BrowserWebviewProps {
 export const BrowserWebview: React.FC<BrowserWebviewProps> = ({ url }) => {
   const { activeTab, refresh } = useBrowser();
   const isTauri = isTauriEnvironment();
-  const isSecure = url.startsWith("https://") || url.startsWith("kage://");
+  const isSecure = url.startsWith("https://") || url.startsWith("arbelune://") || url.startsWith("kage://");
 
   return (
     <div className="browser-webview" role="region" aria-label="Web page viewport">

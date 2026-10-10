@@ -85,14 +85,14 @@ def check_inv_07_react_no_raw_cdp():
     return True
 
 def check_cef_03b_sandbox_gate():
-    """CEF-03b: KAGE_DISABLE_CEF_SANDBOX must not be set in CI/normal builds."""
-    val = os.environ.get("KAGE_DISABLE_CEF_SANDBOX", "")
+    """CEF-03b: ARBELUNE_DISABLE_CEF_SANDBOX / KAGE_DISABLE_CEF_SANDBOX must not be set in CI/normal builds."""
+    val = os.environ.get("ARBELUNE_DISABLE_CEF_SANDBOX", "") or os.environ.get("KAGE_DISABLE_CEF_SANDBOX", "")
     disabled = val and val not in ("0", "false", "False", "FALSE")
     if disabled:
-        print("[FAIL] CEF-03b: KAGE_DISABLE_CEF_SANDBOX is set in this environment.")
+        print("[FAIL] CEF-03b: Sandbox disable environment variable is set in this environment.")
         print(f"       Value: '{val}' — this is forbidden in CI and automated verification.")
         return False
-    print("[PASS] Sandbox override environment check: KAGE_DISABLE_CEF_SANDBOX is unset.")
+    print("[PASS] Sandbox override environment check: ARBELUNE/KAGE_DISABLE_CEF_SANDBOX is unset.")
     return True
 
 def check_cef_01_runtime_validated_before_builder():

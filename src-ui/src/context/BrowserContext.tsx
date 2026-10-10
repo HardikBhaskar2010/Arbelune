@@ -229,7 +229,7 @@ const INITIAL_LOGS: ConsoleLog[] = [
   {
     id: "log-1",
     level: "info",
-    message: "[KAGE Host] Chromium Embedded Framework v126 initialized with OSR compositor.",
+    message: "[Arbelune Host] Chromium Embedded Framework v152 initialized with Windowed CEF compositor.",
     source: "host::cef_pump:88",
     timestamp: "02:01:02.140",
   },
@@ -393,14 +393,14 @@ const SAMPLE_DOM_TREE: DOMNode = {
       tag: "head",
       attributes: {},
       children: [
-        { id: "node-title", tag: "title", attributes: {}, text: "KAGE Browser for Builders" },
+        { id: "node-title", tag: "title", attributes: {}, text: "Arbelune Browser for Builders" },
         { id: "node-meta-1", tag: "meta", attributes: { charset: "utf-8" } },
       ],
     },
     {
       id: "node-body",
       tag: "body",
-      className: "kage-app-canvas",
+      className: "arbelune-app-canvas",
       attributes: { role: "main" },
       styles: { display: "flex", flexDirection: "column", minHeight: "100vh" },
       boxModel: { margin: 0, border: 0, padding: 0, width: 1440, height: 900 },
@@ -413,7 +413,7 @@ const SAMPLE_DOM_TREE: DOMNode = {
           styles: { padding: "32px", display: "flex", alignItems: "center", justifyContent: "space-between" },
           boxModel: { margin: 0, border: 1, padding: 32, width: 1440, height: 80 },
           children: [
-            { id: "node-logo", tag: "div", className: "brand-logo", attributes: {}, text: "KAGE 影" },
+            { id: "node-logo", tag: "div", className: "brand-logo", attributes: {}, text: "Arbelune" },
             { id: "node-nav", tag: "nav", className: "header-nav", attributes: {}, text: "Docs · Showcase · GitHub" },
           ],
         },
@@ -427,7 +427,7 @@ const SAMPLE_DOM_TREE: DOMNode = {
           children: [
             { id: "node-h1", tag: "h1", className: "page-title", attributes: {}, text: "The Developer-First Autonomous Browser" },
             { id: "node-p1", tag: "p", className: "lead-text", attributes: {}, text: "Bridging the gap between manual inspection and agentic browser execution." },
-            { id: "node-btn-cta", tag: "button", className: "btn-primary-peach", attributes: { type: "button" }, text: "Start Building with Kage" },
+            { id: "node-btn-cta", tag: "button", className: "btn-primary-peach", attributes: { type: "button" }, text: "Start Building with Arbelune" },
           ],
         },
       ],
@@ -532,10 +532,10 @@ export const BrowserProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [devToolsOpen, setDevToolsOpen] = useState(false);
   const [inspectMode, setInspectMode] = useState(false);
 
-  // Real user bookmarks (persisted in localStorage)
+  // Real user bookmarks (persisted in localStorage with seamless migration)
   const [bookmarks, setBookmarks] = useState<Bookmark[]>(() => {
     try {
-      const saved = localStorage.getItem("kage_bookmarks");
+      const saved = localStorage.getItem("arbelune_bookmarks") || localStorage.getItem("kage_bookmarks");
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
@@ -544,7 +544,7 @@ export const BrowserProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   useEffect(() => {
     try {
-      localStorage.setItem("kage_bookmarks", JSON.stringify(bookmarks));
+      localStorage.setItem("arbelune_bookmarks", JSON.stringify(bookmarks));
     } catch {}
   }, [bookmarks]);
 
@@ -590,8 +590,7 @@ export const BrowserProvider: React.FC<{ children: React.ReactNode }> = ({ child
   useEffect(() => {
     if (!isTauriEnvironment()) return;
 
-    let unlistenFn: (() => void) | null = null;
-    listen<any>("kage:browser:event", (event) => {
+    const handleBrowserEvent = (event: any) => {
       const payload = event.payload;
       if (!payload || !payload.kind) return;
       const { tab_id, kind } = payload;
@@ -727,12 +726,21 @@ export const BrowserProvider: React.FC<{ children: React.ReactNode }> = ({ child
           }
         }
       }
-    }).then((unlisten) => {
-      unlistenFn = unlisten;
+    };
+
+    let unlistenArbelune: (() => void) | null = null;
+    let unlistenKage: (() => void) | null = null;
+
+    listen<any>("arbelune:browser:event", handleBrowserEvent).then((unlisten) => {
+      unlistenArbelune = unlisten;
+    });
+    listen<any>("kage:browser:event", handleBrowserEvent).then((unlisten) => {
+      unlistenKage = unlisten;
     });
 
     return () => {
-      if (unlistenFn) unlistenFn();
+      if (unlistenArbelune) unlistenArbelune();
+      if (unlistenKage) unlistenKage();
     };
   }, []);
 
@@ -873,7 +881,7 @@ export const BrowserProvider: React.FC<{ children: React.ReactNode }> = ({ child
       return;
     }
 
-    if (!/^https?:\/\//i.test(cleanUrl) && !cleanUrl.startsWith("kage://")) {
+    if (!/^https?:\/\//i.test(cleanUrl) && !cleanUrl.startsWith("arbelune://") && !cleanUrl.startsWith("kage://")) {
       if (/^[\w-]+(\.[\w-]+)+/.test(cleanUrl)) {
         cleanUrl = `https://${cleanUrl}`;
       } else {

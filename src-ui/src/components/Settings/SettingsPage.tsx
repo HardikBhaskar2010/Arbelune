@@ -42,7 +42,7 @@ export const SettingsPage: React.FC = () => {
   };
 
   return (
-    <div className="settings-page" role="main" aria-label="KAGE Settings">
+    <div className="settings-page" role="main" aria-label="Arbelune Settings">
       <div className="settings-container">
         {/* Header */}
         <div className="settings-header">
@@ -79,7 +79,7 @@ export const SettingsPage: React.FC = () => {
               onClick={() => setActiveTab("about")}
             >
               <Info size={16} strokeWidth={1.8} />
-              About KAGE
+              About Arbelune
             </button>
           </nav>
 
@@ -294,17 +294,20 @@ export const SettingsPage: React.FC = () => {
               </div>
             )}
 
-            {/* ── About KAGE Tab ──────────────────────────────────── */}
+            {/* ── About Arbelune Tab ──────────────────────────────────── */}
             {activeTab === "about" && (
               <div className="settings-section">
-                <h2>About KAGE (影)</h2>
+                <h2>About Arbelune</h2>
                 <SpotlightCard className="about-card" style={{ position: "relative", overflow: "hidden" }}>
                   <BorderBeam size={220} duration={12} colorFrom="#F9DBBD" colorTo="#DA627D" />
                   <div className="about-logo-row">
-                    <img src="/Logo.png" alt="KAGE" className="about-logo" />
+                    <img src="/arbelune-icon.png" alt="Arbelune" className="about-logo" />
                     <div>
-                      <h3>KAGE Browser</h3>
-                      <p>Version 0.2.1-dev (Architectural Milestone 1.0.0)</p>
+                      <h3>Arbelune Browser</h3>
+                      <p>Version 0.4.1 (Architectural Milestone 1.0.0)</p>
+                      <p style={{ fontSize: "12px", opacity: 0.8, marginTop: "4px" }}>
+                        A governed browser runtime for AI agents, with controlled actions, verified outcomes, and human takeover.
+                      </p>
                     </div>
                   </div>
 
@@ -315,7 +318,7 @@ export const SettingsPage: React.FC = () => {
                     </div>
                     <div className="about-spec-row">
                       <span>Browser Runtime:</span>
-                      <strong>Chromium Embedded Framework (CEF v126)</strong>
+                      <strong>Chromium Embedded Framework (CEF 152)</strong>
                     </div>
                     <div className="about-spec-row">
                       <span>UI Chrome:</span>
@@ -329,7 +332,7 @@ export const SettingsPage: React.FC = () => {
 
                   <div className="about-links">
                     <a
-                      href="https://github.com/HardikBhaskar2010/Kage"
+                      href="https://github.com/HardikBhaskar2010/Arbelune"
                       target="_blank"
                       rel="noreferrer"
                       className="about-link"

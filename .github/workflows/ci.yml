@@ -83,7 +83,7 @@ jobs:
       - name: Upload dist artifact
         uses: actions/upload-artifact@v4
         with:
-          name: kage-ui-dist
+          name: arbelune-ui-dist
           path: src-ui/dist/
           retention-days: 7
 

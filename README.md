@@ -1,12 +1,12 @@
 <p align="center">
-  <img src="public/kage-logo.png" alt="KAGE Logo" width="130" />
+  <img src="public/arbelune-logo.png" alt="Arbelune Logo" width="440" />
 </p>
 
-<h1 align="center">KAGE (影)</h1>
+<h1 align="center">Arbelune</h1>
 <h3 align="center">The Governed Browser Runtime for AI Agents</h3>
 
 <p align="center">
-  <em>A governed browser runtime for AI agents, with controlled actions, verified outcomes, and human takeover.</em>
+  <em>Browser for Builders · A governed browser runtime for AI agents, with controlled actions, verified outcomes, and human takeover.</em>
 </p>
 
 <p align="center">
@@ -32,8 +32,13 @@
 ---
 
 <p align="center">
-  <img src="public/preview.png" alt="KAGE Governed Desktop Browser Runtime Preview" width="100%" />
+  <img src="public/arbelune-banner.png" alt="Arbelune Governed Desktop Browser Runtime Banner" width="100%" />
 </p>
+
+---
+
+> [!NOTE]
+> **Identity Notice:** *Arbelune is the official evolution of the project formerly known as KAGE (影). All architecture contracts, audit ledgers, and capabilities continue forward under the Arbelune identity.*
 
 ---
 
@@ -72,8 +77,8 @@ For developers evaluating the desktop runtime without compiling native CEF from 
 
 #### 2. Clone & Install
 ```bash
-git clone https://github.com/HardikBhaskar2010/Kage.git
-cd Kage
+git clone https://github.com/HardikBhaskar2010/Arbelune.git
+cd Arbelune
 npm install
 ```
 
@@ -90,13 +95,13 @@ npm run tauri dev
 
 ---
 
-## <img src="public/icons/browser.svg" width="20" height="20" align="absmiddle" /> Why KAGE?
+## <img src="public/icons/browser.svg" width="20" height="20" align="absmiddle" /> Why Arbelune?
 
 Today's browser-automation frameworks (Playwright, Puppeteer, raw CDP WebSockets) were built for deterministic integration testing, **not autonomous AI reasoning**. 
 
 When modern LLMs operate browsers without governance, they run blind, leak secrets, hallucinate action success, and cannot be interrupted safely.
 
-| Challenge | Raw Browser Automation | KAGE Governed Runtime |
+| Challenge | Raw Browser Automation | Arbelune Governed Runtime |
 |---|---|---|
 | **Action Authority** | Unconstrained WebSocket commands directly to CDP | Every action passes through a policy-adjudicated **Rust Tool Bus** (`INV-02`) |
 | **Outcome Verification** | Tool invocation is assumed to equal success | **Deterministic Verifier** checks live DOM transitions before proceeding (`INV-08`) |
@@ -110,7 +115,7 @@ When modern LLMs operate browsers without governance, they run blind, leak secre
 ## <img src="public/icons/monitor.svg" width="20" height="20" align="absmiddle" /> Workstation Tour
 
 ### 1. Autonomous Agent HUD & Audit Lineage
-When KAGE's agent operates web pages, every action displays its complete, cryptographically verified lineage in the supervisory HUD:
+When Arbelune's agent operates web pages, every action displays its complete, cryptographically verified lineage in the supervisory HUD:
 
 ```text
 task_linearization › step_1 › Req: req_981a › Exec: exec_bc23 › Audit: aud_f401 › Vfy: vfy_e812
@@ -124,28 +129,28 @@ task_linearization › step_1 › Req: req_981a › Exec: exec_bc23 › Audit: a
 Native Win32 child HWND composition inside Tauri v2 WebView2 chrome. 60–120 FPS GPU compositing with mathematically proven zero-overlap geometry across multi-DPI screens.
 
 <p align="center">
-  <img src="public/Mockup_Browsing Screen.png" alt="KAGE Live Browsing Screen" width="100%" />
+  <img src="public/Mockup_Browsing Screen.png" alt="Arbelune Live Browsing Screen" width="100%" />
 </p>
 
 ### 3. The Omnibox Command Hub
 A distraction-free, anime-futuristic command hub. Instant workspace switching, pinned developer profiles, live system telemetry, and keyboard-first command dispatch.
 
 <p align="center">
-  <img src="public/Mockup_New Tab Screen.png" alt="KAGE New Tab Hub" width="100%" />
+  <img src="public/Mockup_New Tab Screen.png" alt="Arbelune New Tab Hub" width="100%" />
 </p>
 
 ### 4. The Liquid Glass Design System
 High visual clarity with translucent acrylic depth, obsidian backings, and warm peach-to-burgundy gradients (`#F9DBBD` → `#450920`). Physics-based micro-interactions, spring gestures, and strict 60 FPS transitions.
 
 <p align="center">
-  <img src="public/Design System.png" alt="KAGE Liquid Glass Design System" width="100%" />
+  <img src="public/Design System.png" alt="Arbelune Liquid Glass Design System" width="100%" />
 </p>
 
 ---
 
 ## <img src="public/icons/layers.svg" width="20" height="20" align="absmiddle" /> The Five-Plane Architecture
 
-KAGE divides browser control into five isolated planes to guarantee that web content and AI models never gain unauthorized OS or browser authority:
+Arbelune divides browser control into five isolated planes to guarantee that web content and AI models never gain unauthorized OS or browser authority:
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
@@ -175,7 +180,7 @@ KAGE divides browser control into five isolated planes to guarantee that web con
 
 ## <img src="public/icons/shield.svg" width="20" height="20" align="absmiddle" /> Inviolable Architecture Contracts
 
-All capabilities in KAGE are governed by strict architectural invariants verified in automated CI gates:
+All capabilities in Arbelune are governed by strict architectural invariants verified in automated CI gates:
 
 | Contract ID | Invariant Principle | Automated CI Verification Gate |
 |---|---|---|
@@ -197,7 +202,7 @@ All capabilities in KAGE are governed by strict architectural invariants verifie
 
 ## <img src="public/icons/book.svg" width="20" height="20" align="absmiddle" /> Documentation & Specifications
 
-KAGE is fully documented across 25 foundational specifications:
+Arbelune is fully documented across 25 foundational specifications:
 
 | Area | Specifications |
 |---|---|
@@ -226,4 +231,4 @@ We welcome contributions from engineers building browser automation, AI agent ru
 
 Licensed under either of [Apache License, Version 2.0](LICENSE-APACHE) or [MIT License](LICENSE-MIT) at your option.
 
-All rights reserved © 2026 KAGE Project.
+All rights reserved © 2026 Arbelune Project (formerly KAGE).

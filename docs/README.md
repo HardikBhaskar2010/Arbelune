@@ -1,12 +1,12 @@
-# KAGE Specification Suite & Architecture Map
+# Arbelune Specification Suite & Architecture Map
 
 **Status:** Architecture v0.4.1 · Core Implementation Complete · **Total Specifications:** 25 Documents · **Target:** v1.0.0 Alpha / MVP
 
 <p align="center">
-  <img src="../public/preview.png" alt="KAGE Architecture Preview" width="100%" />
+  <img src="../public/arbelune-banner.png" alt="Arbelune Architecture Preview" width="100%" />
 </p>
 
-Welcome to the KAGE technical documentation suite. KAGE is **the governed browser runtime for AI agents** — letting AI agents operate a real desktop browser with controlled actions, observable results, verification, and human control. Built on **Tauri (Rust) + Chromium Embedded Framework (CEF 152) + React/TypeScript (Liquid Glass UI Chrome)**.
+Welcome to the Arbelune technical documentation suite. Arbelune is **the governed browser runtime for AI agents, with controlled actions, verified outcomes, and human takeover.** Built on **Tauri (Rust) + Chromium Embedded Framework (CEF 152) + React/TypeScript (Liquid Glass UI Chrome)**.
 
 ---
 

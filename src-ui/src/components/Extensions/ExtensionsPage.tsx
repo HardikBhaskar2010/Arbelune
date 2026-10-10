@@ -76,14 +76,14 @@ export const ExtensionsPage: React.FC = () => {
   };
 
   return (
-    <div className="extensions-page" role="main" aria-label="KAGE Extensions & Plugins">
+    <div className="extensions-page" role="main" aria-label="Arbelune Extensions & Plugins">
       <div className="ext-container">
         {/* Header */}
         <div className="ext-header">
           <div>
             <h1 className="ext-title">Extensions & Plugins</h1>
             <p className="ext-subtitle">
-              Secure WebAssembly (Wasmtime) sandboxed plugins extending KAGE browser capabilities.
+              Secure WebAssembly (Wasmtime) sandboxed plugins extending Arbelune browser capabilities.
             </p>
           </div>
           <button className="ext-install-btn" onClick={handleInstallDummy}>
