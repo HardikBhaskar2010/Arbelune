@@ -3,77 +3,135 @@
 </p>
 
 <h1 align="center">KAGE (影)</h1>
-<h3 align="center">The Developer-First Autonomous Browser & Instrumentation Workstation</h3>
+<h3 align="center">The Governed Browser Runtime for AI Agents</h3>
 
 <p align="center">
-  <em>A standalone desktop browser fusing Chromium standards execution, native runtime DevTools, a permission-governed Tool Bus, and an autonomous AI agent into a singular, high-craft workstation.</em>
+  <em>A governed browser runtime for AI agents, with controlled actions, verified outcomes, and human takeover.</em>
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Host-Tauri%20v2%20(Rust)-orange?style=flat-square&logo=rust" alt="Tauri Rust" />
   <img src="https://img.shields.io/badge/Engine-Chromium%20CEF%20152-blue?style=flat-square&logo=googlechrome" alt="Chromium CEF" />
   <img src="https://img.shields.io/badge/Frontend-React%2018%20%2B%20TypeScript-61dafb?style=flat-square&logo=react" alt="React 18" />
-  <img src="https://img.shields.io/badge/Design-Liquid%20Glass-critical?style=flat-square" alt="Liquid Glass" />
-  <img src="https://img.shields.io/badge/Architecture-v0.4.1-purple?style=flat-square" alt="Architecture Version" />
-  <img src="https://img.shields.io/badge/Contracts-100%25%20Passing-success?style=flat-square" alt="Contract Gates" />
+  <img src="https://img.shields.io/badge/Contracts-100%25%20Verified-success?style=flat-square" alt="Contract Gates" />
+  <img src="https://img.shields.io/badge/Release-v0.4.1--alpha.dev-blueviolet?style=flat-square" alt="Prerelease" />
   <img src="https://img.shields.io/badge/License-MIT%20%2F%20Apache--2.0-blueviolet?style=flat-square" alt="License" />
 </p>
 
 <p align="center">
-  <a href="https://github.com/topics/autonomous-agents"><img src="https://img.shields.io/badge/%20-autonomous--agents-33202A?style=flat-square&logo=probot&logoColor=DA627D" alt="autonomous-agents" /></a>
-  <a href="https://github.com/topics/browser-automation"><img src="https://img.shields.io/badge/%20-browser--automation-33202A?style=flat-square&logo=googlechrome&logoColor=DA627D" alt="browser-automation" /></a>
   <a href="https://github.com/topics/ai-agent"><img src="https://img.shields.io/badge/%20-ai--agent-33202A?style=flat-square&logo=openai&logoColor=DA627D" alt="ai-agent" /></a>
-  <a href="https://github.com/topics/devtools"><img src="https://img.shields.io/badge/%20-devtools-33202A?style=flat-square&logo=gnubash&logoColor=DA627D" alt="devtools" /></a>
-  <a href="https://github.com/topics/chromium"><img src="https://img.shields.io/badge/%20-chromium-33202A?style=flat-square&logo=chromium&logoColor=DA627D" alt="chromium" /></a>
-  <a href="https://github.com/topics/rust"><img src="https://img.shields.io/badge/%20-rust-33202A?style=flat-square&logo=rust&logoColor=DA627D" alt="rust" /></a>
+  <a href="https://github.com/topics/browser-automation"><img src="https://img.shields.io/badge/%20-browser--automation-33202A?style=flat-square&logo=googlechrome&logoColor=DA627D" alt="browser-automation" /></a>
   <a href="https://github.com/topics/tauri"><img src="https://img.shields.io/badge/%20-tauri-33202A?style=flat-square&logo=tauri&logoColor=DA627D" alt="tauri" /></a>
+  <a href="https://github.com/topics/rust"><img src="https://img.shields.io/badge/%20-rust-33202A?style=flat-square&logo=rust&logoColor=DA627D" alt="rust" /></a>
+  <a href="https://github.com/topics/chromium"><img src="https://img.shields.io/badge/%20-chromium-33202A?style=flat-square&logo=chromium&logoColor=DA627D" alt="chromium" /></a>
+  <a href="https://github.com/topics/cef"><img src="https://img.shields.io/badge/%20-cef-33202A?style=flat-square&logo=googlechrome&logoColor=DA627D" alt="cef" /></a>
+  <a href="https://github.com/topics/devtools"><img src="https://img.shields.io/badge/%20-devtools-33202A?style=flat-square&logo=gnubash&logoColor=DA627D" alt="devtools" /></a>
+  <a href="https://github.com/topics/autonomous-agents"><img src="https://img.shields.io/badge/%20-autonomous--agents-33202A?style=flat-square&logo=probot&logoColor=DA627D" alt="autonomous-agents" /></a>
 </p>
 
 ---
 
 <p align="center">
-  <img src="public/preview.png" alt="KAGE Workstation Full Desktop Preview" width="100%" />
+  <img src="public/preview.png" alt="KAGE Governed Desktop Browser Runtime Preview" width="100%" />
 </p>
 
 ---
 
-## <img src="public/icons/browser.svg" width="20" height="20" align="absmiddle" /> What is KAGE?
+### Three Core Differentiators
 
-Most web development workflows are fragmented across four disconnected silos:
-1. **The Consumer Browser:** Used strictly for passive visual rendering and manual clicks.
-2. **Dense DevTools Panels:** Docked, undocked, and drilled into manually to inspect DOM nodes, computed styles, and network waterfalls.
-3. **External AI Chatbots:** Fed incomplete, copy-pasted HTML snippets or lossy screenshots stripped of actual runtime box models, event listeners, and live network states.
-4. **Brittle Automation Suites:** Re-implementing user workflows in Playwright/Puppeteer boilerplate scripts from scratch.
+* **Governed Actions:** Every browser mutation passes through a policy-adjudicated Rust **Tool Bus** (`INV-02`) with an append-only, SHA-256 hash-chained cryptographic audit ledger (`security_audit.db`). AI never directly controls CDP (`INV-01`, `INV-07`).
+* **Verified Outcomes:** Every action has an observable result (`INV-08`). The **Deterministic Verifier** checks live DOM transitions before the agent proceeds—preventing hallucinated success.
+* **Human Control:** Instant **Supervisory Takeover** and an atomic **STOP linearization point** (`INV-09`) that closes the admission gate to new dispatches without retrospective rollback illusions.
 
-**KAGE replaces this fragmented loop with a unified browser control plane.**
+---
 
-In KAGE:
-* **Chromium handles web standards:** Standard compliance, JS execution, WebGL/WebGPU, and hardware-accelerated Blink rendering via native Chromium Embedded Framework (CEF 152).
-* **Rust owns the desktop shell:** Window management, tab strips, command omnibox, native DevTools, and performance budgets (<150 MB baseline RAM).
-* **AI never gets direct browser authority (`INV-01`):** Every AI action routes through a typed, capability-adjudicated Rust **Tool Bus** (`INV-02`) with an append-only, SHA-256 hash-chained cryptographic audit ledger.
-* **Context is assembled, never dumped:** An active **Context Engine** continuously extracts, redacts, and token-budgets DOM box models, network summaries, and console streams (<4,000 token budget).
-* **Deterministic Verification (`INV-08`):** Autonomous actions require empirical postcondition verification against live DOM digests—never tool invocation alone.
-* **STOP Linearization Point (`INV-09`):** A human "STOP" command immediately rejects future dispatches at the admission gate while in-flight mutations settle cleanly.
+> [!NOTE]
+> **Development Status Notice:**  
+> • **Milestone 1 (Core Architecture & 34 Contract Gates):** **100% Sealed & Passing** in automated CI (`python scripts/verify_contracts.py`).  
+> • **Milestone 2 (Full Product Tested in Motion):** **Active Acceptance Campaign**. Verified on live Windows desktop (`E2E-MOTION-01` Clean Startup, `E2E-MOTION-02` Omnibox Navigation, `E2E-MOTION-03` Multi-Profile Isolation). Evidence recorded in [`evidence/`](evidence/).  
+> • **Milestone 3 (Model B Release Qualification):** Production OS renderer sandbox restrictions (`Untrusted` integrity `0x0000`, `JOB_OBJECT_UILIMIT_ALL`) are **explicitly pending final release candidate qualification**.
+
+---
+
+## <img src="public/icons/terminal.svg" width="20" height="20" align="absmiddle" /> Quick Start & Releases
+
+### Option A: Pre-Built Development Prerelease
+For developers evaluating the desktop runtime without compiling native CEF from source:
+* Grab the latest prerelease build from [GitHub Releases](https://github.com/HardikBhaskar2010/Kage/releases/tag/v0.4.1-alpha.dev) *(Development profile build; Model B release sandbox qualification pending)*.
+
+### Option B: Build From Source (60 Seconds)
+
+#### 1. Prerequisites
+* **Rust:** 1.78+ (`rustup default stable`)
+* **Node.js:** 18+ (`npm` or `pnpm`)
+* **Python:** 3.10+ (for CI contract verification)
+* **OS:** Windows 10/11 (x86_64), macOS 13+, or Linux (Ubuntu 22.04+)
+
+#### 2. Clone & Install
+```bash
+git clone https://github.com/HardikBhaskar2010/Kage.git
+cd Kage
+npm install
+```
+
+#### 3. Verify Architectural Contracts
+Validate that all 34 internal safety contracts, STOP linearization, and packaging invariants pass:
+```bash
+python scripts/verify_contracts.py
+```
+
+#### 4. Launch the Desktop Browser Workstation
+```bash
+npm run tauri dev
+```
+
+---
+
+## <img src="public/icons/browser.svg" width="20" height="20" align="absmiddle" /> Why KAGE?
+
+Today's browser-automation frameworks (Playwright, Puppeteer, raw CDP WebSockets) were built for deterministic integration testing, **not autonomous AI reasoning**. 
+
+When modern LLMs operate browsers without governance, they run blind, leak secrets, hallucinate action success, and cannot be interrupted safely.
+
+| Challenge | Raw Browser Automation | KAGE Governed Runtime |
+|---|---|---|
+| **Action Authority** | Unconstrained WebSocket commands directly to CDP | Every action passes through a policy-adjudicated **Rust Tool Bus** (`INV-02`) |
+| **Outcome Verification** | Tool invocation is assumed to equal success | **Deterministic Verifier** checks live DOM transitions before proceeding (`INV-08`) |
+| **Human Safety & STOP** | Killing the process or brittle script aborts | **Atomic STOP linearization point** freezes dispatches; human takeover is instant (`INV-09`) |
+| **Data Protection** | Entire HTML blobs or passwords dumped into LLM context | **Context Engine** token-budgets DOM box models and redacts secrets (`INV-03`, `INV-06`) |
+| **Execution Surface** | Headless browsers with bot detection flags | **Native Chromium (CEF 152)** child HWND with isolated multi-profile sessions |
+| **Audit & Forensic Trail** | Ephemeral console output | Tamper-evident **SHA-256 hash-chained SQLite ledger** (`security_audit.db`) |
 
 ---
 
 ## <img src="public/icons/monitor.svg" width="20" height="20" align="absmiddle" /> Workstation Tour
 
-### 1. Hardware-Accelerated Browsing Workstation
+### 1. Autonomous Agent HUD & Audit Lineage
+When KAGE's agent operates web pages, every action displays its complete, cryptographically verified lineage in the supervisory HUD:
+
+```text
+task_linearization › step_1 › Req: req_981a › Exec: exec_bc23 › Audit: aud_f401 › Vfy: vfy_e812
+```
+
+* **Outcome Badges:** `PASS` (Green), `FAIL` (Red), `UNKNOWN` (Amber).
+* **Recovery Decisions:** `RETRY`, `ALREADY_RESOLVED`, `PAUSE_FOR_GUIDANCE` (blocks runaway loops on non-idempotent operations).
+* **Human Escape Hatch:** Click **Stop** or **Takeover** at any millisecond to immediately halt autonomous dispatches and assume direct manual mouse/keyboard control.
+
+### 2. Hardware-Accelerated Browsing Workstation
 Native Win32 child HWND composition inside Tauri v2 WebView2 chrome. 60–120 FPS GPU compositing with mathematically proven zero-overlap geometry across multi-DPI screens.
 
 <p align="center">
   <img src="public/Mockup_Browsing Screen.png" alt="KAGE Live Browsing Screen" width="100%" />
 </p>
 
-### 2. The Omnibox & New Tab Experience
+### 3. The Omnibox Command Hub
 A distraction-free, anime-futuristic command hub. Instant workspace switching, pinned developer profiles, live system telemetry, and keyboard-first command dispatch.
 
 <p align="center">
   <img src="public/Mockup_New Tab Screen.png" alt="KAGE New Tab Hub" width="100%" />
 </p>
 
-### 3. The Liquid Glass Design System
+### 4. The Liquid Glass Design System
 High visual clarity with translucent acrylic depth, obsidian backings, and warm peach-to-burgundy gradients (`#F9DBBD` → `#450920`). Physics-based micro-interactions, spring gestures, and strict 60 FPS transitions.
 
 <p align="center">
@@ -83,6 +141,8 @@ High visual clarity with translucent acrylic depth, obsidian backings, and warm 
 ---
 
 ## <img src="public/icons/layers.svg" width="20" height="20" align="absmiddle" /> The Five-Plane Architecture
+
+KAGE divides browser control into five isolated planes to guarantee that web content and AI models never gain unauthorized OS or browser authority:
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
@@ -110,7 +170,7 @@ High visual clarity with translucent acrylic depth, obsidian backings, and warm 
 
 ---
 
-## <img src="public/icons/shield.svg" width="20" height="20" align="absmiddle" /> The Inviolable Architectural Contracts
+## <img src="public/icons/shield.svg" width="20" height="20" align="absmiddle" /> Inviolable Architecture Contracts
 
 All capabilities in KAGE are governed by strict architectural invariants verified in automated CI gates:
 
@@ -132,84 +192,7 @@ All capabilities in KAGE are governed by strict architectural invariants verifie
 
 ---
 
-## <img src="public/icons/activity.svg" width="20" height="20" align="absmiddle" /> Milestone Status & Reconciled Ledger
-
-```
-================================================================================
-           KAGE ARCHITECTURE CONTRACT CI VERIFICATION GATE (v0.4.1)            
-================================================================================
-  PHASE 1  — Governance Subsystem:               SEALED (100%)
-  PHASE 2A — CEF Engine Infrastructure:          SEALED (100%)
-  PHASE 2B — Real CEF Lifecycle:                 SEALED (100%)
-  PHASE 2C — Production Tauri + CEF Composition: SEALED (100%)
-  PHASE 2D — CEF 152 Sandbox Release Packaging:  CI PACKAGING PASSED (RELEASE RC QUALIFICATION PENDING)
-  PHASE 3  — Browser Lifecycle & Control Plane:  SEALED (100%)
-  PHASE 4  — Empirical CDP DevTools Protocol:    SEALED (100%)
-  PHASE 5  — Live Telemetry & Context Streaming: SEALED (100%)
-  PHASE 6  — Testing Lab & Contract Test Gates:  SEALED (100%)
-  PHASE 7  — Profiles, Storage & Permissions:     SEALED (100%)
-  PHASE 8  — Governed Tool Suite & Capabilities:  SEALED (100%)
-  PHASE 9  — Autonomous Agent Runtime & Context: SEALED (100%)
-  PHASE 10 — Verified Autonomy, STOP & Recovery: SEALED (100%)
-  PHASE 11 — KAGE MVP Release & Hardened Shell:  SEALED (100%)
---------------------------------------------------------------------------------
-  PHASE 1-11 CORE IMPLEMENTATION:                COMPLETE (v0.4.1; RELEASE QUALIFICATION PENDING)
-  FULL KAGE AUTONOMOUS AGENT CONTROL PLANE:      VERIFIED (Milestone 11 Complete)
-================================================================================
-```
-
-### Execution Topologies (Dev vs. Release)
-* **Model A (Development & Debug):** Separate `kage-cef-subprocess.exe` helper with `no_sandbox = true` for high-velocity local debugging, WinDbg symbols, and rapid hot-reloading.
-* **Model B (Production Release Package):** Single unified `KAGE.exe` bootstrap executable linking `cef_sandbox.lib` forwarding to `kage_client.dll`. In accordance with CEF M138+ standards, browser and child helper processes share the common executable with full OS sandbox token restriction (`Untrusted` / `Low` integrity). Final signed release seal is granted upon Model B package qualification.
-
----
-
-## <img src="public/icons/terminal.svg" width="20" height="20" align="absmiddle" /> Quick Start (60 Seconds)
-
-### 1. Prerequisites
-* **Rust:** 1.78+ (`rustup default stable`)
-* **Node.js:** 18+ (`pnpm` or `npm`)
-* **Python:** 3.10+ (for CI verification suite)
-* **Operating System:** Windows 10/11 (x86_64), macOS 13+, or Linux (Ubuntu 22.04+)
-
-### 2. Clone & Install
-```bash
-# Clone the repository
-git clone https://github.com/HardikBhaskar2010/Kage.git
-cd Kage
-
-# Install UI dependencies
-npm install
-```
-
-### 3. Run Automated CI Contract Verification
-Verify all 10 architecture contracts, STOP linearization, CEF 152 packaging, and governed ToolBus suites:
-```bash
-python scripts/verify_contracts.py
-```
-
-### 4. Launch Development Browser Workstation
-```bash
-npm run tauri dev
-```
-
----
-
-## <img src="public/icons/cpu.svg" width="20" height="20" align="absmiddle" /> Supervisory HUD & Audit Lineage
-
-When the KAGE Autonomous Agent navigates or interacts with web applications, every action displays its complete, cryptographically verified lineage in the supervisory HUD:
-
-```text
-task_linearization › step_1 › Req: req_981a › Exec: exec_bc23 › Audit: aud_f401 › Vfy: vfy_e812
-```
-
-* **Outcome Badges:** `PASS` (Green), `FAIL` (Red), `UNKNOWN` (Amber).
-* **Recovery Decisions:** `RETRY`, `ALREADY_RESOLVED`, `PAUSE_FOR_GUIDANCE`.
-* **Human Escape Hatch:** Click **Stop** or **Takeover** at any millisecond to immediately halt autonomous mutations and assume direct manual keyboard/mouse control.
-
----
-
-## <img src="public/icons/book.svg" width="20" height="20" align="absmiddle" /> Specification Suite
+## <img src="public/icons/book.svg" width="20" height="20" align="absmiddle" /> Documentation & Specifications
 
 KAGE is fully documented across 25 foundational specifications:
 
@@ -219,10 +202,20 @@ KAGE is fully documented across 25 foundational specifications:
 | **Architecture** | [Master Architecture](docs/02-architecture/Architecture.md) · [CEF Integration](docs/02-architecture/CEF_Integration.md) · [Tauri Architecture](docs/02-architecture/Tauri_Architecture.md) · [Architecture Contracts](docs/02-architecture/Architecture_Contracts.md) |
 | **Core Subsystems** | [Tool Bus](docs/03-core/Tool_System.md) · [Context Engine](docs/03-core/Context_Engine.md) · [Micro Inspect](docs/03-core/Micro_Inspect.md) · [Workspaces](docs/03-core/Workspace_System.md) |
 | **Intelligence** | [AI Architecture](docs/04-ai/AI_Architecture.md) · [DevTools Architecture](docs/05-devtools/DevTools_Architecture.md) |
-| **Testing & Quality** | [Testing Lab](docs/06-testing/Testing_Lab.md) · [Testing Strategy](docs/06-testing/Testing_Strategy.md) |
+| **Testing & Quality** | [Testing Lab](docs/06-testing/Testing_Lab.md) · [Testing Strategy](docs/06-testing/Testing_Strategy.md) · [E2E Acceptance Matrix](docs/06-testing/E2E_Acceptance_Matrix.md) |
 | **Security & Data** | [Security Model](docs/08-security/Security_Model.md) · [Data Model](docs/07-platform/Data_Model.md) · [Plugin API](docs/07-platform/Plugin_API.md) |
 | **UI & Experience** | [Liquid Glass Design System](docs/09-ui/Design_System.md) |
 | **Milestone Reports** | [Phase 11 Report (M11 Hardened Shell)](docs/reports/M11_Hardened_Shell_Integration.md) · [Ground Truth Audit](docs/KAGE_Ground_Truth_Audit.md) |
+
+---
+
+## <img src="public/icons/activity.svg" width="20" height="20" align="absmiddle" /> Community & Contributing
+
+We welcome contributions from engineers building browser automation, AI agent runtimes, and Chromium-based tools:
+
+* **Contribute Code:** Read [CONTRIBUTING.md](CONTRIBUTING.md) for local environment setup, branching conventions, and PR guidelines.
+* **Security & Vulnerabilities:** Review [SECURITY.md](SECURITY.md) for our responsible disclosure policy.
+* **Code of Conduct:** Please review our [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ---
 

@@ -6,7 +6,7 @@
   <img src="../public/preview.png" alt="KAGE Architecture Preview" width="100%" />
 </p>
 
-Welcome to the KAGE technical documentation suite. KAGE is a developer-first standalone browser built on **Tauri (Rust) + Chromium Embedded Framework (CEF) + React/TypeScript (Liquid Glass UI Chrome)**.
+Welcome to the KAGE technical documentation suite. KAGE is **the governed browser runtime for AI agents** — letting AI agents operate a real desktop browser with controlled actions, observable results, verification, and human control. Built on **Tauri (Rust) + Chromium Embedded Framework (CEF 152) + React/TypeScript (Liquid Glass UI Chrome)**.
 
 ---
 
