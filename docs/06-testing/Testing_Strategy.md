@@ -127,21 +127,24 @@ Testing KAGE in motion requires handling two distinct rendering planes:
 Ordinary browser automation frameworks cannot control native child HWNDs directly. Therefore, KAGE establishes a **Tripartite Testing Architecture**:
 
 ```text
-┌────────────────────────────────────────────────────────────────────────┐
-│                        E2E TESTING ARCHITECTURE                        │
-├───────────────────────────┬────────────────────────────────────────────┤
-│ Presentation Chrome       │ WebdriverIO + @wdio/tauri-service          │
-│ (Omnibox, Tabs, HUD)      │ Uses tauri-driver to automate native UI    │
-├───────────────────────────┼────────────────────────────────────────────┤
-│ Native Browsing Surface   │ KAGE ToolBus & Internal CDP Client         │
-│ (CEF Child HWND / Blink)  │ Injects PageClick, PageFill, DOM checks    │
-├───────────────────────────┼────────────────────────────────────────────┤
-│ Frontend Regression Mode  │ Playwright Test                            │
-│ (Component & Journeys)    │ Exercises React shell in browser mode      │
-├───────────────────────────┼────────────────────────────────────────────┤
-│ Authoritative Verification│ SQLite Audit Log + DOM Digest Verification │
-│ (Truth Ledger)            │ Verifies audit_id, verifier_id, and tokens │
-└───────────────────────────┴────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                              E2E TESTING ARCHITECTURE                                  │
+├───────────────────────────┬───────────────────────────────┬────────────────────────────┤
+│ TIER / SURFACE            │ INPUT CHANNELS                │ ASSERTION CHANNELS         │
+├───────────────────────────┼───────────────────────────────┼────────────────────────────┤
+│ Presentation Chrome       │ WebdriverIO + @wdio/tauri-svc │ React DOM element states,  │
+│ (Tauri v2 / React 18)     │ Uses tauri-driver on UI chrome│ HUD outcome badges, tabs   │
+├───────────────────────────┼───────────────────────────────┼────────────────────────────┤
+│ Native Browsing Surface   │ • Agent: ToolBus & CDP Gateway│ • CDP DOM & AX Tree snapshot│
+│ (CEF Child HWND / Blink)  │ • Human: Native Win32 Input   │ • CDP Page.loadEventFired  │
+│                           │   (WM_KEYDOWN, SendInput)     │ • Multi-DPI HWND bounds    │
+├───────────────────────────┼───────────────────────────────┼────────────────────────────┤
+│ Frontend Regression Mode  │ Playwright Test               │ Visual regressions, layout,│
+│ (Component & Journeys)    │ Exercises React shell isolated│ accessibility tree in DOM  │
+├───────────────────────────┼───────────────────────────────┼────────────────────────────┤
+│ Authoritative Truth Ledger│ Dispatched ToolRequests &     │ Parameterized SQLite audit │
+│ (security_audit.db)       │ AdmissionGate transitions     │ queries, SHA-256 hash chain│
+└───────────────────────────┴───────────────────────────────┴────────────────────────────┘
 ```
 
 ### 6.1 Desktop UI Automation (`@wdio/tauri-service`)
@@ -159,11 +162,15 @@ export const config = {
 };
 ```
 
-### 6.2 Native CEF Child HWND Testing & CDP Bridge
-Because CEF child HWNDs cannot be selected with standard DOM queries from the host webview, interactions inside the web content are driven through KAGE's production `ToolBus` (`page_navigate`, `page_click`, `page_fill`) and verified against live DOM and AX tree digests.
+### 6.2 Native CEF Child HWND & Multi-Surface Input Channels
+Because CEF child HWNDs cannot be selected with standard DOM queries from the host webview, interactions are driven through dedicated channels:
+- **Agent Actions:** Autonomous actions are dispatched via `ToolBus::dispatch` and translated into CDP input commands (`Input.dispatchMouseEvent`, `Input.dispatchKeyEvent`).
+- **Human Takeover Actions:** Direct manual interactions inside web content are driven via native Win32 window messages (`WM_LBUTTONDOWN`, `WM_KEYDOWN`, `WM_CHAR`, or OS `SendInput`) targeted at `Chrome_RenderWidgetHostHWND`.
+- **Human Navigation:** Omnibox navigation is invoked via Tauri IPC `navigate_to` to `TabManager` and `CefRuntime::load_url_by_browser_id` (not through ToolBus).
+- **Observable Outcomes:** All interactions are verified across three simultaneous surfaces: Win32 HWND bounds, live Chromium CDP DOM/AX digests, and the tamper-evident SQLite audit ledger.
 
 ### 6.3 E2E Acceptance Matrix & The 8 Motion Tests
-For the full 15-feature acceptance matrix and detailed execution steps for the 8 core motion tests (Clean Startup, Real Navigation, Multi-Profile Isolation, Live LLM Task, Takeover Resync, STOP Linearization, Uncertain Recovery, and Clean Teardown), see:
+For the full 15-feature acceptance matrix, operational status taxonomy, and detailed execution specifications for the 8 core motion tests (Clean Startup, Real Navigation, Multi-Profile Isolation, Live LLM Task, Takeover Resync, STOP Linearization, Uncertain Recovery, and Clean Teardown), see:
 👉 **[`E2E_Acceptance_Matrix.md`](E2E_Acceptance_Matrix.md)**.
 
 ---
