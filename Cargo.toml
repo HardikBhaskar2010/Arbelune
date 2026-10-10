@@ -16,10 +16,10 @@ members = [
 ]
 
 [workspace.package]
-version = "0.2.1"
+version = "0.4.1"
 edition = "2021"
 authors = ["Hardik Bhaskar <hardik.bhaskar2010@gmail.com>"]
-license = "Proprietary"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/HardikBhaskar2010/Kage"
 
 [workspace.dependencies]

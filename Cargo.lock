@@ -2034,7 +2034,7 @@ dependencies = [
 
 [[package]]
 name = "kage-agent"
-version = "0.2.1"
+version = "0.4.1"
 dependencies = [
  "async-trait",
  "chrono",
@@ -2054,7 +2054,7 @@ dependencies = [
 
 [[package]]
 name = "kage-browser"
-version = "0.2.1"
+version = "0.4.1"
 dependencies = [
  "kage-cdp",
  "kage-context",
@@ -2072,7 +2072,7 @@ dependencies = [
 
 [[package]]
 name = "kage-cdp"
-version = "0.2.1"
+version = "0.4.1"
 dependencies = [
  "futures-util",
  "kage-core",
@@ -2088,14 +2088,14 @@ dependencies = [
 
 [[package]]
 name = "kage-cef-subprocess"
-version = "0.2.1"
+version = "0.4.1"
 dependencies = [
  "cef",
 ]
 
 [[package]]
 name = "kage-client"
-version = "0.2.1"
+version = "0.4.1"
 dependencies = [
  "cef",
  "kage-core",
@@ -2105,7 +2105,7 @@ dependencies = [
 
 [[package]]
 name = "kage-context"
-version = "0.2.1"
+version = "0.4.1"
 dependencies = [
  "kage-core",
  "serde",
@@ -2116,7 +2116,7 @@ dependencies = [
 
 [[package]]
 name = "kage-core"
-version = "0.2.1"
+version = "0.4.1"
 dependencies = [
  "async-trait",
  "chrono",
@@ -2133,7 +2133,7 @@ dependencies = [
 
 [[package]]
 name = "kage-engine"
-version = "0.2.1"
+version = "0.4.1"
 dependencies = [
  "cef",
  "hex",
@@ -2147,7 +2147,7 @@ dependencies = [
 
 [[package]]
 name = "kage-host"
-version = "0.2.1"
+version = "0.4.1"
 dependencies = [
  "async-trait",
  "kage-browser",
@@ -2170,7 +2170,7 @@ dependencies = [
 
 [[package]]
 name = "kage-integration-tests"
-version = "0.2.1"
+version = "0.4.1"
 dependencies = [
  "async-trait",
  "cef",
@@ -2198,7 +2198,7 @@ dependencies = [
 
 [[package]]
 name = "kage-plugin"
-version = "0.2.1"
+version = "0.4.1"
 dependencies = [
  "serde",
  "serde_json",
@@ -2209,7 +2209,7 @@ dependencies = [
 
 [[package]]
 name = "kage-storage"
-version = "0.2.1"
+version = "0.4.1"
 dependencies = [
  "async-trait",
  "chrono",
