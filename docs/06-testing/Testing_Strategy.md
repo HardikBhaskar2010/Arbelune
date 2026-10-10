@@ -136,8 +136,8 @@ Ordinary browser automation frameworks cannot control native child HWNDs directl
 │ (Tauri v2 / React 18)     │ Uses tauri-driver on UI chrome│ HUD outcome badges, tabs   │
 ├───────────────────────────┼───────────────────────────────┼────────────────────────────┤
 │ Native Browsing Surface   │ • Agent: ToolBus & CDP Gateway│ • CDP DOM & AX Tree snapshot│
-│ (CEF Child HWND / Blink)  │ • Human: Native Win32 Input   │ • CDP Page.loadEventFired  │
-│                           │   (WM_KEYDOWN, SendInput)     │ • Multi-DPI HWND bounds    │
+│ (CEF Child HWND / Blink)  │ • Human: OS System Input      │ • CDP Page.loadEventFired  │
+│                           │   (SetForeground + SendInput) │ • Multi-DPI HWND bounds    │
 ├───────────────────────────┼───────────────────────────────┼────────────────────────────┤
 │ Frontend Regression Mode  │ Playwright Test               │ Visual regressions, layout,│
 │ (Component & Journeys)    │ Exercises React shell isolated│ accessibility tree in DOM  │
@@ -165,12 +165,16 @@ export const config = {
 ### 6.2 Native CEF Child HWND & Multi-Surface Input Channels
 Because CEF child HWNDs cannot be selected with standard DOM queries from the host webview, interactions are driven through dedicated channels:
 - **Agent Actions:** Autonomous actions are dispatched via `ToolBus::dispatch` and translated into CDP input commands (`Input.dispatchMouseEvent`, `Input.dispatchKeyEvent`).
-- **Human Takeover Actions:** Direct manual interactions inside web content are driven via native Win32 window messages (`WM_LBUTTONDOWN`, `WM_KEYDOWN`, `WM_CHAR`, or OS `SendInput`) targeted at `Chrome_RenderWidgetHostHWND`.
+- **Human Takeover Actions (OS Input Stream):** User-like typing into web content requires establishing window focus (`SetForegroundWindow` on host, focusing child `Chrome_RenderWidgetHostHWND`) followed by OS-level `SendInput`. (Direct window message injection via `WM_KEYDOWN`/`WM_CHAR` is isolated to dedicated message-queue diagnostic tests).
 - **Human Navigation:** Omnibox navigation is invoked via Tauri IPC `navigate_to` to `TabManager` and `CefRuntime::load_url_by_browser_id` (not through ToolBus).
 - **Observable Outcomes:** All interactions are verified across three simultaneous surfaces: Win32 HWND bounds, live Chromium CDP DOM/AX digests, and the tamper-evident SQLite audit ledger.
 
-### 6.3 E2E Acceptance Matrix & The 8 Motion Tests
-For the full 15-feature acceptance matrix, operational status taxonomy, and detailed execution specifications for the 8 core motion tests (Clean Startup, Real Navigation, Multi-Profile Isolation, Live LLM Task, Takeover Resync, STOP Linearization, Uncertain Recovery, and Clean Teardown), see:
+### 6.3 Deterministic Safety vs. Live-Model Acceptance
+To prevent non-deterministic LLM latency or tool drift from obscuring safety guarantees, KAGE divides agent acceptance into two distinct gates:
+1. **Deterministic Safety Acceptance:** Supervisory takeover (`INV-09`), atomic STOP under load (`INV-09`), and non-idempotent recovery (`INV-08`) are exercised using a **controlled agent planner fixture** to prove admission and idempotency guarantees deterministically.
+2. **Live-Model Acceptance:** The end-to-end autonomous agent workflow is exercised against an external configured LLM provider to validate un-canned prompt understanding and live tool proposal streaming.
+
+For the full 15-feature acceptance matrix, idle RAM telemetry protocol, and evidence logging schema for the 8 motion tests, see:
 👉 **[`E2E_Acceptance_Matrix.md`](E2E_Acceptance_Matrix.md)**.
 
 ---
