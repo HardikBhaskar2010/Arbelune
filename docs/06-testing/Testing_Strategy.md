@@ -118,38 +118,53 @@ Before any release candidate build is approved, it must pass the **Automated Sec
 
 ---
 
-## 6. End-to-End (E2E) System Testing with Playwright
+## <img src="../../public/icons/terminal.svg" width="20" height="20" align="absmiddle" /> 6. End-to-End (E2E) System Testing Architecture
 
-KAGE uses Playwright to test the entire compiled desktop binary on physical CI environments (Windows, macOS, Linux):
+Testing KAGE in motion requires handling two distinct rendering planes:
+1. **The Presentation Shell (Tauri v2 / React 18):** Rendered in the OS-hosted webview.
+2. **The Chromium Browsing Plane (CEF 152):** Composited in a native Win32 child HWND directly below the React chrome.
+
+Ordinary browser automation frameworks cannot control native child HWNDs directly. Therefore, KAGE establishes a **Tripartite Testing Architecture**:
+
+```text
+┌────────────────────────────────────────────────────────────────────────┐
+│                        E2E TESTING ARCHITECTURE                        │
+├───────────────────────────┬────────────────────────────────────────────┤
+│ Presentation Chrome       │ WebdriverIO + @wdio/tauri-service          │
+│ (Omnibox, Tabs, HUD)      │ Uses tauri-driver to automate native UI    │
+├───────────────────────────┼────────────────────────────────────────────┤
+│ Native Browsing Surface   │ KAGE ToolBus & Internal CDP Client         │
+│ (CEF Child HWND / Blink)  │ Injects PageClick, PageFill, DOM checks    │
+├───────────────────────────┼────────────────────────────────────────────┤
+│ Frontend Regression Mode  │ Playwright Test                            │
+│ (Component & Journeys)    │ Exercises React shell in browser mode      │
+├───────────────────────────┼────────────────────────────────────────────┤
+│ Authoritative Verification│ SQLite Audit Log + DOM Digest Verification │
+│ (Truth Ledger)            │ Verifies audit_id, verifier_id, and tokens │
+└───────────────────────────┴────────────────────────────────────────────┘
+```
+
+### 6.1 Desktop UI Automation (`@wdio/tauri-service`)
+Following official Tauri testing standards, desktop E2E tests use WebdriverIO and `tauri-driver`:
 
 ```typescript
-// tests/e2e/micro_inspect.spec.ts
-import { test, expect } from '@playwright/test';
-
-test('Micro Inspect Locks Element and Injects Style', async ({ app }) => {
-  // Launch compiled KAGE desktop application
-  const window = await app.firstWindow();
-  
-  // Navigate to test fixture
-  await window.fill('#omnibox-input', 'https://localhost:3000/fixture');
-  await window.press('#omnibox-input', 'Enter');
-
-  // Toggle Micro Inspect mode
-  await window.keyboard.press('Control+Shift+C');
-
-  // Hover over target card
-  await window.mouse.move(400, 300);
-  await expect(window.locator('#micro-inspect-card')).toBeVisible();
-
-  // Click to lock
-  await window.mouse.click(400, 300);
-  await expect(window.locator('#micro-inspect-card .btn-lock')).toHaveText('Locked');
-
-  // Trigger Explain Action
-  await window.click('#micro-inspect-card .btn-explain');
-  await expect(window.locator('#ai-drawer')).toBeVisible();
-});
+// wdio.conf.ts
+export const config = {
+  services: ['tauri'],
+  capabilities: [{
+    'tauri:options': {
+      application: '../target/debug/kage-host.exe',
+    },
+  }],
+};
 ```
+
+### 6.2 Native CEF Child HWND Testing & CDP Bridge
+Because CEF child HWNDs cannot be selected with standard DOM queries from the host webview, interactions inside the web content are driven through KAGE's production `ToolBus` (`page_navigate`, `page_click`, `page_fill`) and verified against live DOM and AX tree digests.
+
+### 6.3 E2E Acceptance Matrix & The 8 Motion Tests
+For the full 15-feature acceptance matrix and detailed execution steps for the 8 core motion tests (Clean Startup, Real Navigation, Multi-Profile Isolation, Live LLM Task, Takeover Resync, STOP Linearization, Uncertain Recovery, and Clean Teardown), see:
+👉 **[`E2E_Acceptance_Matrix.md`](E2E_Acceptance_Matrix.md)**.
 
 ---
 

@@ -173,6 +173,7 @@ graph TD
 |---|---|---|
 | [Testing_Lab.md](06-testing/Testing_Lab.md) | `KAGE-TEST-001` | Native action recorder, assertion builder, headless replay runner, and diffable test artifacts. |
 | [Testing_Strategy.md](06-testing/Testing_Strategy.md) | `KAGE-TEST-002` | Quality gates, unit test suites, integration test harness, end-to-end testing, and chaos testing. |
+| [E2E_Acceptance_Matrix.md](06-testing/E2E_Acceptance_Matrix.md) | `KAGE-TEST-003` | Product-wide acceptance matrix, live model verification tracker, and 8 motion test specs. |
 
 ### 07 · Platform & Storage
 | Document | Document ID | Description |
