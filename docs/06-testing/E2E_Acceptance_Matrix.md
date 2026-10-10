@@ -4,7 +4,7 @@
 |---|---|
 | **Document ID** | `KAGE-TEST-003` |
 | **Status** | Active Operational Acceptance Matrix (Campaign In Progress) |
-| **Version** | v0.4.2 (Milestone 2 Campaign Specification) |
+| **Version** | v0.4.3 (Milestone 2 Campaign Specification) |
 | **Architecture Phase** | Milestone 2: Full Product Tested in Motion |
 | **Classification** | Integrated Dual-Surface Verification & Motion Campaign |
 
@@ -37,7 +37,7 @@ To ensure complete engineering transparency, KAGE rigorously separates implement
 
 ## 2. Dual-Surface Desktop Testing Architecture
 
-Because KAGE composites a native Win32 child HWND (`Chrome_RenderWidgetHostHWND`) inside Tauri v2 WebView2 presentation chrome, standard browser automation (such as Playwright running in standalone browser mode) cannot locate or manipulate the native CEF surface directly.
+Because KAGE composites a native Win32 child HWND inside Tauri v2 WebView2 presentation chrome, standard browser automation (such as Playwright running in standalone browser mode) cannot locate or manipulate the native CEF surface directly.
 
 KAGE establishes a **Tripartite Testing Architecture** with strictly delineated input and assertion channels:
 
@@ -66,8 +66,8 @@ KAGE establishes a **Tripartite Testing Architecture** with strictly delineated 
 
 #### A. Input Channels
 1. **Presentation / UI Input (`tauri-driver` / WebdriverIO):** Drives the outer OS window and React shell DOM elements (`#omnibox-input`, `#tab-strip`, `#btn-takeover`, `#btn-stop`).
-2. **OS System Input Stream (`SendInput`):** Inserts simulated keyboard and mouse events into the system input stream at the Windows input subsystem/driver level.
-   * *Critical Windows Requirement:* `SendInput` does **not** accept an `HWND` parameter. The test driver must establish foreground state (`SetForegroundWindow(host_hwnd)`) and keyboard focus on the child window (`Chrome_RenderWidgetHostHWND`) before dispatching input.
+2. **OS System Input Stream (`SendInput`):** Inserts synthesized keystrokes and mouse events into the system keyboard or mouse input stream via the Windows input manager.
+   * *Critical Windows Requirement:* `SendInput` does **not** accept an `HWND` parameter. The test driver must actively establish foreground state (`SetForegroundWindow(host_hwnd)`), verify that foreground activation succeeded (`GetForegroundWindow()`), and ensure keyboard focus is on the native browser content before dispatching input.
    * *Role:* This is the **primary user-like input path** for testing human typing and clicking in web content during supervisory takeover.
 3. **Targeted Window Message Injection (`PostMessage`/`SendMessage` with `WM_KEYDOWN`, `WM_CHAR`):** Posts messages directly into a target window's message queue.
    * *Critical Distinction:* Posting messages to an `HWND` bypasses the Windows input subsystem and keyboard state tables (`GetKeyboardState`, `GetAsyncKeyState`). It does not reliably reproduce keyboard focus state or complex text-input composition.
@@ -76,9 +76,11 @@ KAGE establishes a **Tripartite Testing Architecture** with strictly delineated 
 5. **IPC Navigation Transport (`navigate_to`):** Human omnibox entry invokes Tauri IPC `navigate_to(tab_id, url)` → `TabManager::navigate` → `CefRuntime::load_url_by_browser_id`.
    * *Architectural Rule:* Human omnibox navigation is direct host browser navigation governed by `CEF-06` and `CEF-05`. It does **not** route through the agent `ToolBus` (`INV-02`).
 
-#### B. Assertion Channels
+#### B. Assertion Channels & HWND Hierarchy Verification
 1. **Presentation Assertions:** Validates React component trees, active tab indicators, HUD status badges (`PASS`, `FAIL`, `UNKNOWN`, `STOPPED`), and trace lineage formatting.
-2. **Win32 Host Windowing Assertions:** Validates OS window hierarchy (`GetParent(child_hwnd) == main_hwnd`), window class name (`Chrome_RenderWidgetHostHWND`), and client aperture bounds (`GetWindowRect`).
+2. **Win32 Host Windowing Assertions (HWND Hierarchy):**
+   * *CEF Embedded Browser HWND (`CefBrowserHost::GetWindowHandle()`):* Assert that this native browser window is a direct child of the Tauri host window (`GetParent(browser_hwnd) == host_hwnd`) and matches the calculated layout aperture bounds (`cef_content_rect`).
+   * *Render-Widget Descendant HWND (e.g., `Chrome_RenderWidgetHostHWND`):* Inspect and record the actual descendant window tree under the browser surface HWND. Verify its location in the hierarchy and confirm its bounds align with the active content viewport, recording observed build-specific hierarchy in test artifacts.
 3. **Chromium Engine Assertions:** Validates real web page state via internal CDP session (`DOM.getDocument`, `Accessibility.getFullAXTree`, `Runtime.evaluate`, `Page.loadEventFired`).
 4. **Authoritative Truth Ledger Assertions:** Validates tamper-evident SHA-256 hash chains in `security_audit.db`, correlation of `task_id`, `step_id`, `request_id`, `execution_id`, `audit_id`, `verifier_id`, and `IdempotencyMatrix` recovery decisions (`PAUSE_FOR_GUIDANCE`).
    * *Applicability Rule:* When a test does not execute an agent action (e.g., cold startup, human omnibox navigation, tab strip switching), the Governance Ledger channel is explicitly marked `N/A (Human action / no ToolBus dispatch)`. No test forces a synthetic audit record where none architecturally exists.
@@ -97,21 +99,21 @@ To prevent non-deterministic LLM variability (latency, hallucinated tool selecti
 
 | # | User-Visible Feature | Interaction Surfaces & Input Channel | Architecture Contract | Model Dependency | Motion Campaign Status | Observable Assertion Channels & Pass Criteria |
 |---|---|---|---|---|---|---|
-| **01** | **Clean Startup & Engine Init** | Win32 Host + Tauri + CEF Child HWND<br>*(Launcher Input via WebDriver)* | `CEF-01`, `CEF-05` | Deterministic (No LLM) | **Awaiting Desktop Motion Run** | • **Tauri:** `app_ready` IPC event emitted.<br>• **Host:** `CefEngineState::BrowserCreationAllowed`.<br>• **Win32:** Child HWND attached to parent with class `Chrome_RenderWidgetHostHWND`.<br>• **Process:** Cold launch process tree RAM $< 150\text{ MB}$.<br>• **Governance:** *N/A (Host lifecycle; no ToolBus dispatch).* |
-| **02** | **Omnibox URL Navigation** | Tauri UI (`#omnibox-input`) → IPC `navigate_to` → Host → CEF<br>*(UI Input via WebDriver)* | `CEF-06`, `CEF-05` | Human Driven (No LLM) | **Awaiting Desktop Motion Run** | • **Win32:** Child HWND bounds match calculated aperture.<br>• **CEF:** CDP `Page.frameNavigated` & `Page.loadEventFired`; `document.title` matches.<br>• **Tauri:** Omnibox reflects URL; security badge shows TLS state.<br>• **Governance:** *N/A (Human navigation via Tauri IPC; no ToolBus dispatch).* |
+| **01** | **Clean Startup & Engine Init** | Win32 Host + Tauri + CEF Native Surface<br>*(Launcher Input via WebDriver)* | `CEF-01`, `CEF-05` | Deterministic (No LLM) | **Awaiting Desktop Motion Run** | • **Tauri:** `app_ready` IPC event emitted.<br>• **Host:** `CefEngineState::BrowserCreationAllowed`.<br>• **Win32:** CEF browser window parented to host (`GetParent == host`); descendant render-widget HWND hierarchy inspected and recorded.<br>• **Process:** Scoped process-tree working set $< 150\text{ MB}$.<br>• **Governance:** *N/A (Host lifecycle).* |
+| **02** | **Omnibox URL Navigation** | Tauri UI (`#omnibox-input`) → IPC `navigate_to` → Host → CEF<br>*(UI Input via WebDriver)* | `CEF-06`, `CEF-05` | Human Driven (No LLM) | **Awaiting Desktop Motion Run** | • **Win32:** Browser surface HWND bounds match calculated aperture.<br>• **CEF:** CDP `Page.frameNavigated` & `Page.loadEventFired`; `document.title` matches.<br>• **Tauri:** Omnibox reflects URL; security badge shows TLS state.<br>• **Governance:** *N/A (Human navigation via Tauri IPC; no ToolBus dispatch).* |
 | **03** | **Tab Strips & Lifecycle** | Tauri UI (`#tab-strip`) → IPC `create_tab` / `switch_tab` / `close_tab`<br>*(UI Input via WebDriver)* | `INV-10`, `CEF-05` | Human Driven (No LLM) | **Awaiting Desktop Motion Run** | • **Win32:** Switching tabs toggles child HWND visibility.<br>• **CEF:** TabManager binds `BrowserSurfaceId` and browser ID.<br>• **Host:** Closing tab destroys child HWND with zero handle leaks.<br>• **Governance:** *N/A (Human tab management).* |
 | **04** | **Multi-Profile Isolation** | Profile Picker → `ProfileManager` → CEF Request Contexts<br>*(UI Input via WebDriver)* | `INV-10` | Deterministic (No LLM) | **Awaiting Desktop Motion Run** | • **CEF/CDP:** Cookie set in Personal profile tab is completely absent in Ephemeral Sandbox tab.<br>• **Storage:** In-memory sandbox cache wiped on tab close.<br>• **Governance:** *N/A (Session isolation).* |
-| **05** | **Window Resize & Multi-DPI** | Win32 Host Window → `NativeSurfaceManager`<br>*(OS Window Resize Input)* | `CEF-06A..C` | Deterministic (No LLM) | **Awaiting Desktop Motion Run** | • **Win32:** `GetWindowRect(child_hwnd)` equals calculated `cef_content_rect` with 0px overlap across 100%, 150%, and 200% DPI scaling.<br>• **Governance:** *N/A (Layout geometry).* |
+| **05** | **Window Resize & Multi-DPI** | Win32 Host Window → `NativeSurfaceManager`<br>*(OS Window Resize Input)* | `CEF-06A..C` | Deterministic (No LLM) | **Awaiting Desktop Motion Run** | • **Win32:** `GetWindowRect(browser_hwnd)` equals calculated `cef_content_rect` with 0px overlap across 100%, 150%, and 200% DPI scaling.<br>• **Governance:** *N/A (Layout geometry).* |
 | **06** | **Autonomous Agent Task** | AI Sidebar (`#agent-prompt-input`) → Runtime → ToolBus → CEF<br>*(Natural Language Prompt)* | `INV-01`, `INV-02`, `INV-04` | **Real Configured LLM Provider** | **Awaiting Live Model Run** | • **Runtime:** LLM tool proposals dispatched via `ToolBus`.<br>• **CEF:** Actions execute via CDP `Input.dispatchMouseEvent` / `KeyEvent`.<br>• **HUD:** Displays `PASS` badge.<br>• **Governance:** `security_audit.db` logs full SHA-256 lineage (`req_xxx`, `exec_xxx`, `aud_xxx`). |
 | **07** | **DOM & AX Tree Observation** | Context Engine ↔ Internal CDP Gateway<br>*(Agent Observation Snapshot)* | `INV-03`, `INV-06` | **Real Configured LLM Provider** | **Awaiting Live Model Run** | • **Context:** Token budget $< 4,000$ tokens.<br>• **Security:** Zero passwords, authorization headers, or session cookies present in LLM prompt payload.<br>• **Governance:** Sanitizer audit verification. |
 | **08** | **Postcondition Verification** | Verifier Engine ↔ Internal CDP Gateway<br>*(Agent Mutating Tool Execution)* | `INV-08` | **Real Configured LLM Provider** | **Awaiting Live Model Run** | • **CEF/CDP:** Verifier evaluates postcondition against live DOM transition.<br>• **HUD:** Outcome rendered as verified `PASS`, `FAIL`, or `UNKNOWN` badge.<br>• **Governance:** `VerificationResult` committed to audit ledger. |
-| **09** | **Supervisory Takeover** | Agent HUD (`#btn-takeover`) + Native Child HWND<br>*(UI Click + OS `SendInput`)* | `INV-09`, `INV-04` | **Controlled Safety Fixture** | **Awaiting Desktop Motion Run** | • **Host:** AdmissionGate blocks agent tool dispatches.<br>• **CEF:** OS `SendInput` modifies form fields in focused child HWND.<br>• **Context:** Resuming forces fresh observation `obs_fresh_resync_xxx` before next step.<br>• **Governance:** Takeover state recorded in audit trail. |
-| **10** | **Atomic STOP Under Load** | Agent HUD (`#btn-stop`) → `DispatchAdmissionGate`<br>*(UI Click during in-flight action)* | `INV-09` | **Controlled Safety Fixture** | **Awaiting Desktop Motion Run** | • **Host:** Gate freezes admission; cancels in-flight via token; rejects subsequent dispatches with `ToolError::Cancelled`.<br>• **HUD:** Renders `STOPPED` (no retrospective rollback claimed).<br>• **Governance:** Audit log records cancellation point; zero mutations post-STOP. |
+| **09** | **Supervisory Takeover** | Agent HUD (`#btn-takeover`) + Native Child HWND<br>*(UI Click + OS `SendInput`)* | `INV-09`, `INV-04` | **Controlled Safety Fixture** | **Awaiting Desktop Motion Run** | • **Host:** AdmissionGate blocks agent tool dispatches.<br>• **CEF:** Verified foreground focus; OS `SendInput` modifies form fields in child HWND; CDP verifies field value.<br>• **Context:** Resuming forces fresh observation `obs_fresh_resync_xxx` before next step.<br>• **Governance:** Takeover state recorded in audit trail. |
+| **10** | **Atomic STOP Under Load** | Agent HUD (`#btn-stop`) → `DispatchAdmissionGate`<br>*(UI Click during in-flight action)* | `INV-09` | **Controlled Safety Fixture** | **Awaiting Desktop Motion Run** | • **Admission Gate:** Establishes STOP linearization point; unconditionally rejects subsequent dispatches.<br>• **In-Flight Action:** Allows already-dispatched CEF action to settle cleanly without rollback illusion.<br>• **HUD:** Renders `STOPPED`.<br>• **Governance:** Audit log records STOP linearization point, rejected dispatches, and final settlement of in-flight action. |
 | **11** | **Uncertain Recovery Guard** | Recovery Engine ↔ Verifier<br>*(Mutating Action + Synthetic ACK Drop)* | `INV-08` | **Controlled Safety Fixture** | **Awaiting Desktop Motion Run** | • **Verifier:** Missing transition ACK yields `UNKNOWN`.<br>• **Planner:** `IdempotencyMatrix` triggers `PAUSE_FOR_GUIDANCE` (blocks auto-retry).<br>• **HUD:** Human guidance prompt displayed.<br>• **Governance:** Audit ledger records `Indeterminate` state. |
 | **12** | **Micro Inspect Overlay** | React HUD Overlay ↔ Internal CDP `Overlay`<br>*(UI Shortcut / Click Input)* | `INV-07` | Deterministic (No LLM) | **Awaiting Desktop Motion Run** | • **CEF:** CDP highlights hovered element bounding box.<br>• **Tauri UI:** Inspect card renders box model and computed CSS without direct WebSocket exposure.<br>• **Governance:** *N/A (Telemetry overlay).* |
 | **13** | **Trace Lineage Card** | Agent HUD Trace Inspector<br>*(Task Step Execution)* | `INV-05` | **Real Configured LLM Provider** | **Awaiting Live Model Run** | • **HUD:** Card displays verifiable lineage breadcrumb matching SQLite: `Task › Step › Req: req_xxx › Exec: exec_xxx › Audit: aud_xxx › Vfy: vfy_xxx`.<br>• **Governance:** Hash-chain linkage verified. |
 | **14** | **Clean App Teardown** | Win32 Host Window → Teardown Coordinator<br>*(OS Window Close Input)* | `TEARDOWN`, `CEF-01` | Deterministic (No LLM) | **Awaiting Desktop Motion Run** | • **Win32/CEF:** Two-stage teardown drains message loop and calls `cef::shutdown()`.<br>• **Process:** All host and helper PIDs exit within 3,000 ms with 0 orphaned processes.<br>• **Governance:** *N/A (Process termination).* |
-| **15** | **Production Sandbox Enforcement** | Model B Release Bootstrap (`KAGE.exe`)<br>*(Production Binary Execution)* | `CEF-03b-C/D` | Packaging / Security (No LLM) | **Awaiting Milestone 3 RC Run** | • **Security:** Windows token inspection confirms child renderer processes run with `Untrusted` or `Low` integrity tokens and restricted token sids.<br>• **Governance:** Genesis hash verification. |
+| **15** | **Production Sandbox Enforcement** | Model B Release Bootstrap (`KAGE.exe`)<br>*(Production Binary Execution)* | `CEF-03b-C/D` | Packaging / Security (No LLM) | **Awaiting Milestone 3 RC Run** | • **Security:** Windows token inspection confirms expected per-role policies: Renderer (`Untrusted` integrity, `JOB_OBJECT_UILIMIT_ALL`, restricted token SIDs); Utility/GPU (`Low` integrity/AppContainer).<br>• **Governance:** Genesis hash verification. |
 
 ---
 
@@ -128,11 +130,13 @@ These 8 operational workflows test KAGE as a complete, running desktop applicati
 * **Assertion Channels & Pass Criteria:**
   * **Tauri UI:** Await `app_ready` IPC event from React presentation shell.
   * **Rust Host:** Await `CefEngineState::BrowserCreationAllowed` event from host engine.
-  * **Win32 Windowing:** Win32 API (`FindWindowExW`, `GetParent`) confirms child window with class `Chrome_RenderWidgetHostHWND` is parented to host window.
-  * **Process Telemetry (Memory Baseline):**
-    * *Metric:* Total `WorkingSet64` (physical RAM) summed across the **entire KAGE process tree** (host `kage-host.exe` plus all `kage-cef-subprocess.exe` child helper/renderer processes).
-    * *Measurement Protocol:* Launch cold to `about:blank`, settle for 5.0 seconds into idle state, sample 3 readings at 1,000 ms intervals, calculate the mean.
-    * *Target & Justification:* Mean process tree working set $< 150\text{ MB}$. (Justified product target: KAGE runs concurrently with heavy developer IDEs and compilers; low baseline RAM prevents host thrashing).
+  * **Win32 Windowing (HWND Hierarchy):**
+    * *Browser Surface HWND:* Query Win32 API (`CefBrowserHost::GetWindowHandle()`) to confirm browser window is a direct child of the host window (`GetParent(browser_hwnd) == host_hwnd`).
+    * *Descendant Hierarchy:* Recursively inspect child windows under the browser surface; identify and record the render-widget HWND (e.g. `Chrome_RenderWidgetHostHWND`), asserting its client rect matches the calculated aperture.
+  * **Process Telemetry (Scoped Process-Tree Memory Budget):**
+    * *Scoping Protocol:* Identify the root `kage-host.exe` PID; recursively query `Win32_Process` (`ParentProcessId == current_set`) to collect the complete child process tree (including all `kage-cef-subprocess.exe` renderers, GPU, and utility helpers). Sum `WorkingSet64` strictly across this PID set.
+    * *Sampling Protocol:* Launch cold to `about:blank`, settle for 5.0 seconds into idle state, sample 3 readings at 1,000 ms intervals, calculate the arithmetic mean.
+    * *Product Budget:* Mean process-tree working set $< 150\text{ MB}$.
   * **Governance Ledger:** `N/A (Host initialization; no agent tool dispatches)`.
 
 ### Test 2: Real Navigation & Viewport Alignment (`E2E-MOTION-02`)
@@ -143,7 +147,7 @@ These 8 operational workflows test KAGE as a complete, running desktop applicati
   * React invokes Tauri IPC `navigate_to(tab_id, url)`.
   * `TabManager::navigate` updates navigation history; calls `CefRuntime::load_url_by_browser_id`. *(Governed by `CEF-06`, `CEF-05`; not ToolBus).*
 * **Assertion Channels & Pass Criteria:**
-  * **Win32 Windowing:** `GetWindowRect(child_hwnd)` coordinates match calculated layout aperture (`cef_content_rect`) with 0px overlap with React chrome.
+  * **Win32 Windowing:** `GetWindowRect(browser_hwnd)` coordinates match calculated layout aperture (`cef_content_rect`) with 0px overlap with React chrome.
   * **Chromium Content (CDP):** CDP session receives `Page.frameNavigated` and `Page.loadEventFired`; `Runtime.evaluate("document.title")` asserts `"KAGE Checkout Lab"`.
   * **Tauri UI:** Omnibox updates display URL, tab title reflects page title, and security lock icon updates to secure (`is_secure == true`).
   * **Governance Ledger:** `N/A (Human navigation via Tauri IPC; no ToolBus dispatch)`.
@@ -157,8 +161,8 @@ These 8 operational workflows test KAGE as a complete, running desktop applicati
   * `TabManager` binds `BrowserSurfaceId` and toggles CEF browser visibility via `set_browser_visible_by_id`.
 * **Assertion Channels & Pass Criteria:**
   * **Chromium Content (CDP):** Tab 1 (Personal Profile) navigates to test site and sets cookie `auth=personal_token`. Tab 2 (Ephemeral Sandbox Profile) inspects `document.cookie` via its CDP session: asserts cookie is empty.
-  * **Win32 Windowing:** Active tab's child HWND is visible; inactive tab's child HWND is hidden.
-  * **Storage/Cleanup:** Closing Tab 2 destroys child HWND and wipes in-memory sandbox cache.
+  * **Win32 Windowing:** Active tab's browser HWND is visible; inactive tab's browser HWND is hidden.
+  * **Storage/Cleanup:** Closing Tab 2 destroys browser HWND and wipes in-memory sandbox cache.
   * **Governance Ledger:** `N/A (Tab strip management; no agent tool dispatch)`.
 
 ### Test 4: Live Autonomous Task with Configured Model Provider (`E2E-MOTION-04`)
@@ -181,9 +185,11 @@ These 8 operational workflows test KAGE as a complete, running desktop applicati
 * **Input Channels:**
   * **Tauri UI Input:** While autonomous task is in-flight, WebDriver clicks `#btn-takeover` in React HUD.
   * **OS System Input Stream (`SendInput`):**
-    1. Test driver calls Win32 `SetForegroundWindow(host_hwnd)` to establish foreground state.
-    2. Focus is placed into the target address field in the child `Chrome_RenderWidgetHostHWND` (via synthetic click into client aperture).
-    3. Test driver invokes `SendInput` with `KEYEVENTF_UNICODE` events to simulate user typing into the focused CEF page.
+    1. Test driver calls Win32 `SetForegroundWindow(host_hwnd)` to request foreground state.
+    2. Test driver calls `GetForegroundWindow()` to verify that the host window (or its child) is actively in the foreground.
+    3. Keyboard focus is placed on the target shipping address field in the native browser surface.
+    4. Test driver invokes `SendInput` with keyboard events to simulate user typing into the focused CEF page.
+    5. Test driver asserts through CDP (`Runtime.evaluate`) that the form input field value updated to the human-typed address.
   * *Diagnostic Note (`E2E-DIAG-WINMSG`):* Direct window-message injection (`PostMessage` with `WM_KEYDOWN`/`WM_CHAR`) is maintained as a separate, scoped diagnostic test and is **not** conflated with this OS input path.
   * **Tauri UI Input:** WebDriver clicks `#btn-resume` in React HUD.
 * **Transport & Orchestration:**
@@ -195,8 +201,8 @@ These 8 operational workflows test KAGE as a complete, running desktop applicati
   * **Agent Context:** Context Engine captures fresh observation `obs_fresh_resync_xxx` with updated DOM digest before the planner generates subsequent actions.
   * **Truth Ledger:** Takeover transition committed to audit log.
 
-### Test 6: STOP Linearization Under Mutation Load (`E2E-MOTION-06`)
-* **Goal:** Prove that STOP enforces atomic fail-closed rejection without making false promises of retrospective rollback.
+### Test 6: Atomic STOP Under Load (`E2E-MOTION-06`)
+* **Goal:** Prove that STOP enforces atomic fail-closed rejection without making false promises of retrospective rollback (Strict `INV-09` Compliance).
 * **Model Dependency:** **Controlled Safety Fixture** (dispatches a repeatable, predictable 5-step mutation chain).
 * **Input Channels:**
   * **Agent Action Input:** Agent fixture dispatches 5 sequential mutating clicks.
@@ -204,9 +210,11 @@ These 8 operational workflows test KAGE as a complete, running desktop applicati
 * **Transport & Orchestration:**
   * `DispatchAdmissionGate::stop()` cancels the `CancellationToken` and freezes admission at the linearization point.
 * **Assertion Channels & Pass Criteria:**
-  * **Host Governance:** In-flight action 2 settles or cancels via its token; actions 3, 4, and 5 are immediately rejected with `ToolError::Cancelled`.
-  * **Truth Ledger:** Zero post-linearization actions execute on the Chromium plane; audit log records cancellation point with unbroken SHA-256 chain.
+  * **Admission Gate:** Establishes the STOP linearization point; unconditionally rejects all subsequent tool dispatch attempts (actions 3, 4, 5) with `ToolError::Cancelled`.
+  * **In-Flight Action:** Requests cooperative cancellation where supported, but allows the already-dispatched CEF action 2 to settle cleanly if it cannot be preempted.
+  * **Postcondition Assertion:** Proves zero new tool dispatches are admitted after the STOP linearization point. Records whether in-flight action 2 completed, failed, or remains uncertain.
   * **Tauri UI:** HUD status bar renders `STOPPED`, explicitly declaring that completed actions are not rolled back retrospectively.
+  * **Truth Ledger:** Audit log records the STOP event, its linearization point, all rejected dispatch attempts, and the final settled outcome of the in-flight action with unbroken SHA-256 hash chains.
 
 ### Test 7: Uncertain Outcome Recovery & Non-Idempotent Protection (`E2E-MOTION-07`)
 * **Goal:** Ensure uncertain execution outcomes (`UNKNOWN`) do not trigger duplicated mutations for non-idempotent operations.
@@ -244,9 +252,9 @@ For every test executed during the Milestone 2 campaign, an immutable evidence r
 | **Identity** | Test ID (`E2E-MOTION-xx`), Build Git SHA, Environment (Windows OS version, display DPI scale), and ISO-8601 Timestamp. |
 | **Execution** | Actual physical execution status: `NOT RUN`, `IN PROGRESS`, `PASSED`, `FAILED`, or `BLOCKED`. *(Never implementation readiness).* |
 | **UI Surface** | Observed HUD badges (`PASS`, `FAIL`, `UNKNOWN`, `STOPPED`), tab strip count/active ID, omnibox display URL, and TLS lock indicator. |
-| **Native Browser** | Win32 HWND hierarchy (`GetParent == host`), child window class, physical window rect coordinates, target page URL, and CDP DOM digest. |
+| **Native Browser** | Win32 HWND hierarchy (`GetParent == host`), observed browser and render-widget window classes, physical window rect coordinates, target page URL, and CDP DOM digest. |
 | **Governance Ledger** | Hash-chained audit lineage (`task_id`, `step_id`, `request_id`, `execution_id`, `audit_id`, `verifier_id`) with SHA-256 chain validation. *(Explicitly recorded as `N/A: <Justification>` for non-agent tests).* |
-| **Artifacts** | Execution log file URI, process memory telemetry samples, CDP event logs, and failure stack traces where applicable. |
+| **Artifacts** | Execution log file URI, scoped process memory telemetry samples, CDP event logs, and failure stack traces where applicable. |
 
 ---
 

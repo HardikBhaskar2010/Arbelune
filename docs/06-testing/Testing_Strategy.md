@@ -165,13 +165,14 @@ export const config = {
 ### 6.2 Native CEF Child HWND & Multi-Surface Input Channels
 Because CEF child HWNDs cannot be selected with standard DOM queries from the host webview, interactions are driven through dedicated channels:
 - **Agent Actions:** Autonomous actions are dispatched via `ToolBus::dispatch` and translated into CDP input commands (`Input.dispatchMouseEvent`, `Input.dispatchKeyEvent`).
-- **Human Takeover Actions (OS Input Stream):** User-like typing into web content requires establishing window focus (`SetForegroundWindow` on host, focusing child `Chrome_RenderWidgetHostHWND`) followed by OS-level `SendInput`. (Direct window message injection via `WM_KEYDOWN`/`WM_CHAR` is isolated to dedicated message-queue diagnostic tests).
+- **Human Takeover Actions (OS Input Stream):** User-like typing into web content requires establishing window focus (`SetForegroundWindow` on host), verifying activation via `GetForegroundWindow()`, and focusing native browser content followed by OS-level `SendInput`. (Direct window message injection via `WM_KEYDOWN`/`WM_CHAR` is isolated to dedicated message-queue diagnostic tests).
 - **Human Navigation:** Omnibox navigation is invoked via Tauri IPC `navigate_to` to `TabManager` and `CefRuntime::load_url_by_browser_id` (not through ToolBus).
+- **Native Window Hierarchy:** Distinguishes the primary browser surface window (`CefBrowserHost::GetWindowHandle()`, parented to host) from descendant render-widget HWNDs (`Chrome_RenderWidgetHostHWND`), recording observed hierarchy in test evidence.
 - **Observable Outcomes:** All interactions are verified across three simultaneous surfaces: Win32 HWND bounds, live Chromium CDP DOM/AX digests, and the tamper-evident SQLite audit ledger.
 
 ### 6.3 Deterministic Safety vs. Live-Model Acceptance
 To prevent non-deterministic LLM latency or tool drift from obscuring safety guarantees, KAGE divides agent acceptance into two distinct gates:
-1. **Deterministic Safety Acceptance:** Supervisory takeover (`INV-09`), atomic STOP under load (`INV-09`), and non-idempotent recovery (`INV-08`) are exercised using a **controlled agent planner fixture** to prove admission and idempotency guarantees deterministically.
+1. **Deterministic Safety Acceptance:** Supervisory takeover (`INV-09`), atomic STOP under load (`INV-09` — establishing the linearization point to reject new admissions while allowing in-flight actions to settle without rollback illusion), and non-idempotent recovery (`INV-08`) are exercised using a **controlled agent planner fixture** to prove admission and idempotency guarantees deterministically.
 2. **Live-Model Acceptance:** The end-to-end autonomous agent workflow is exercised against an external configured LLM provider to validate un-canned prompt understanding and live tool proposal streaming.
 
 For the full 15-feature acceptance matrix, idle RAM telemetry protocol, and evidence logging schema for the 8 motion tests, see:
