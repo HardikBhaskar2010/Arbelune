@@ -1,18 +1,35 @@
-# KAGE Milestone 2 E2E Acceptance Campaign Runner (E2E-MOTION-01 through 08)
+# Arbelune Milestone 2 E2E Acceptance Campaign Runner (E2E-MOTION-01 through 08)
 param(
-    [string]$HostPath = "$PSScriptRoot\..\target\x86_64-pc-windows-msvc\debug\kage-host.exe",
-    [string]$SubprocessPath = "$PSScriptRoot\..\target\x86_64-pc-windows-msvc\debug\kage-cef-subprocess.exe",
+    [string]$HostPath = "",
+    [string]$SubprocessPath = "",
     [string]$EvidenceDir = "$PSScriptRoot\..\evidence"
 )
 
 $ErrorActionPreference = "Stop"
 
+if (-not $HostPath) {
+    if (Test-Path "$PSScriptRoot\..\target\x86_64-pc-windows-msvc\debug\arbelune-host.exe") {
+        $HostPath = "$PSScriptRoot\..\target\x86_64-pc-windows-msvc\debug\arbelune-host.exe"
+    } else {
+        $HostPath = "$PSScriptRoot\..\target\x86_64-pc-windows-msvc\debug\kage-host.exe"
+    }
+}
+
+if (-not $SubprocessPath) {
+    if (Test-Path "$PSScriptRoot\..\target\x86_64-pc-windows-msvc\debug\arbelune-cef-subprocess.exe") {
+        $SubprocessPath = "$PSScriptRoot\..\target\x86_64-pc-windows-msvc\debug\arbelune-cef-subprocess.exe"
+    } else {
+        $SubprocessPath = "$PSScriptRoot\..\target\x86_64-pc-windows-msvc\debug\kage-cef-subprocess.exe"
+    }
+}
+
 Write-Host "================================================================================" -ForegroundColor Cyan
-Write-Host "       KAGE MILESTONE 2: FULL PRODUCT TESTED IN MOTION (E2E-MOTION-01..08)      " -ForegroundColor Cyan
+Write-Host "     ARBELUNE MILESTONE 2: FULL PRODUCT TESTED IN MOTION (E2E-MOTION-01..08)    " -ForegroundColor Cyan
 Write-Host "================================================================================" -ForegroundColor Cyan
 
 # 0. Clean slate: terminate any lingering processes before cold boot
-Write-Host "  -> Purging any lingering kage processes to guarantee pristine cold launch..." -ForegroundColor Gray
+Write-Host "  -> Purging any lingering arbelune/kage processes to guarantee pristine cold launch..." -ForegroundColor Gray
+Stop-Process -Name *arbelune* -Force -ErrorAction SilentlyContinue
 Stop-Process -Name *kage* -Force -ErrorAction SilentlyContinue
 Start-Sleep -Milliseconds 800
 

@@ -41,7 +41,13 @@ impl Default for RuntimeConfig {
         let local_app_data = std::env::var("LOCALAPPDATA")
             .map(PathBuf::from)
             .unwrap_or_else(|_| PathBuf::from("."));
-        let root_cache_path = local_app_data.join("KAGE").join("cef");
+        let arbelune_root = local_app_data.join("Arbelune").join("cef");
+        let legacy_root = local_app_data.join("KAGE").join("cef");
+        let root_cache_path = if !arbelune_root.exists() && legacy_root.exists() {
+            legacy_root
+        } else {
+            arbelune_root
+        };
         let cache_path = root_cache_path.join("profiles").join("default");
 
         Self {

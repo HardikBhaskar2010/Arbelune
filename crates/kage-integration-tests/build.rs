@@ -9,8 +9,10 @@
 fn main() {
     // Declare the cfg to rustc so it doesn't emit `unexpected_cfg` warnings.
     println!("cargo::rustc-check-cfg=cfg(kage_cef_sandbox_enabled)");
+    println!("cargo::rustc-check-cfg=cfg(arbelune_cef_sandbox_enabled)");
 
-    let disable_sandbox = std::env::var("KAGE_DISABLE_CEF_SANDBOX")
+    let disable_sandbox = std::env::var("ARBELUNE_DISABLE_CEF_SANDBOX")
+        .or_else(|_| std::env::var("KAGE_DISABLE_CEF_SANDBOX"))
         .map(|v| !v.is_empty() && v != "0" && v.to_lowercase() != "false")
         .unwrap_or(false);
 
@@ -18,15 +20,17 @@ fn main() {
 
     if disable_sandbox && is_release {
         panic!(
-            "CEF-03b: KAGE_DISABLE_CEF_SANDBOX must not be set when running \
+            "CEF-03b: ARBELUNE_DISABLE_CEF_SANDBOX must not be set when running \
              integration tests in release mode"
         );
     }
 
     if !disable_sandbox {
         println!("cargo:rustc-cfg=kage_cef_sandbox_enabled");
+        println!("cargo:rustc-cfg=arbelune_cef_sandbox_enabled");
     }
 
+    println!("cargo:rerun-if-env-changed=ARBELUNE_DISABLE_CEF_SANDBOX");
     println!("cargo:rerun-if-env-changed=KAGE_DISABLE_CEF_SANDBOX");
     println!("cargo:rerun-if-env-changed=PROFILE");
 }

@@ -32,6 +32,12 @@ pub const CANONICAL_CEF_REDIST_FILES: &[&str] = &[
 ];
 
 /// The primary application binaries defining the official CEF Windows bootstrap architecture.
+pub const ARBELUNE_PRIMARY_APPLICATION_ASSETS: &[&str] = &[
+    "Arbelune.exe",
+    "arbelune_client.dll",
+];
+
+/// Backward-compatible alias for primary application assets.
 pub const KAGE_PRIMARY_APPLICATION_ASSETS: &[&str] = &[
     "KAGE.exe",
     "kage_client.dll",
@@ -302,7 +308,7 @@ pub fn parse_pe_info(data: &[u8]) -> Result<PeInfo, String> {
 pub struct SubprocessManager;
 
 impl SubprocessManager {
-    /// Locate `kage-cef-subprocess.exe` relative to the current running executable.
+    /// Locate CEF subprocess executable (`arbelune-cef-subprocess.exe` or `kage-cef-subprocess.exe`).
     pub fn find_subprocess_path() -> Result<PathBuf, String> {
         let current_exe = std::env::current_exe()
             .map_err(|e| format!("Cannot determine host executable path: {e}"))?;
@@ -311,17 +317,25 @@ impl SubprocessManager {
             .parent()
             .ok_or_else(|| "Current executable has no parent directory".to_string())?;
 
-        let candidate = exe_dir.join("kage-cef-subprocess.exe");
-        if candidate.exists() {
-            Ok(candidate)
+        let arbelune_candidate = exe_dir.join("arbelune-cef-subprocess.exe");
+        let kage_candidate = exe_dir.join("kage-cef-subprocess.exe");
+
+        if arbelune_candidate.exists() {
+            Ok(arbelune_candidate)
+        } else if kage_candidate.exists() {
+            Ok(kage_candidate)
         } else {
-            let dev_candidate = PathBuf::from("target/debug/kage-cef-subprocess.exe");
-            if dev_candidate.exists() {
-                Ok(std::fs::canonicalize(dev_candidate).unwrap_or(candidate))
+            let dev_arbelune = PathBuf::from("target/debug/arbelune-cef-subprocess.exe");
+            let dev_kage = PathBuf::from("target/debug/kage-cef-subprocess.exe");
+            if dev_arbelune.exists() {
+                Ok(std::fs::canonicalize(dev_arbelune).unwrap_or(arbelune_candidate))
+            } else if dev_kage.exists() {
+                Ok(std::fs::canonicalize(dev_kage).unwrap_or(kage_candidate))
             } else {
                 Err(format!(
-                    "kage-cef-subprocess.exe not found at expected location: {}",
-                    candidate.display()
+                    "CEF subprocess helper not found at expected location: {} or {}",
+                    arbelune_candidate.display(),
+                    kage_candidate.display()
                 ))
             }
         }
@@ -329,15 +343,20 @@ impl SubprocessManager {
 
     /// Validate the presence of all required CEF packaged runtime assets (CEF-12).
     pub fn validate_runtime_package(base_dir: &Path) -> Result<(), Vec<String>> {
+        let subproc_exists = base_dir.join("arbelune-cef-subprocess.exe").exists()
+            || base_dir.join("kage-cef-subprocess.exe").exists();
+
         let required_files = [
             "libcef.dll",
-            "kage-cef-subprocess.exe",
             "icudtl.dat",
             "snapshot_blob.bin",
             "v8_context_snapshot.bin",
         ];
 
         let mut missing = Vec::new();
+        if !subproc_exists {
+            missing.push("arbelune-cef-subprocess.exe".to_string());
+        }
         for file in required_files {
             let path = base_dir.join(file);
             if !path.exists() {
@@ -701,20 +720,26 @@ impl SandboxPackagingValidator {
     ) -> SandboxPackagingReport {
         let mut report = SandboxPackagingReport::new(dist_dir.to_path_buf(), mode);
 
-        // Point 1: Release bootstrap architecture (CEF_USE_BOOTSTRAP / bootstrap.exe + kage_client.dll)
+        // Point 1: Release bootstrap architecture (CEF_USE_BOOTSTRAP / bootstrap.exe + client library)
+        let arbelune_exe = dist_dir.join("Arbelune.exe");
         let bootstrap_path = dist_dir.join("bootstrap.exe");
         let kage_exe_path = dist_dir.join("KAGE.exe");
-        let target_bootstrap = if kage_exe_path.exists() {
+        let target_bootstrap = if arbelune_exe.exists() {
+            &arbelune_exe
+        } else if kage_exe_path.exists() {
             &kage_exe_path
         } else if bootstrap_path.exists() {
             &bootstrap_path
         } else {
-            &bootstrap_path
+            &arbelune_exe
         };
 
+        let arbelune_client = dist_dir.join("arbelune_client.dll");
         let client_dll_path = dist_dir.join("kage_client.dll");
         let kage_dll_path = dist_dir.join("KAGE.dll");
-        let target_client = if client_dll_path.exists() {
+        let target_client = if arbelune_client.exists() {
+            Some(&arbelune_client)
+        } else if client_dll_path.exists() {
             Some(&client_dll_path)
         } else if kage_dll_path.exists() {
             Some(&kage_dll_path)
