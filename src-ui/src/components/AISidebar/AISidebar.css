@@ -683,3 +683,308 @@
     transform: none;
   }
 }
+
+/* ─── Autonomous Task State HUD Banner (INV-09, GATE-10-J) ─────── */
+.ai-hud-status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 14px;
+  background: rgba(30, 8, 18, 0.9);
+  border-bottom: 1px solid var(--glass-border);
+  font-size: var(--text-xs);
+  flex-shrink: 0;
+  transition: background var(--duration-fast), border-color var(--duration-fast);
+}
+
+.ai-hud-status-bar--idle {
+  border-bottom-color: rgba(122, 58, 82, 0.3);
+}
+
+.ai-hud-status-bar--executing {
+  background: rgba(43, 14, 26, 0.95);
+  border-bottom-color: rgba(218, 98, 125, 0.5);
+}
+
+.ai-hud-status-bar--takeover_active {
+  background: rgba(60, 30, 10, 0.95);
+  border-bottom-color: rgba(244, 160, 70, 0.5);
+}
+
+.ai-hud-status-bar--stopped {
+  background: rgba(60, 10, 20, 0.95);
+  border-bottom-color: rgba(240, 96, 112, 0.5);
+}
+
+.ai-hud-status-bar__left {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.ai-hud-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--radius-full);
+  background: #34d399;
+  flex-shrink: 0;
+}
+
+.ai-hud-status-bar--executing .ai-hud-status-dot {
+  background: #ffa5ab;
+  animation: hud-dot-pulse 1s infinite alternate;
+}
+
+.ai-hud-status-bar--takeover_active .ai-hud-status-dot {
+  background: #fbbf24;
+}
+
+.ai-hud-status-bar--stopped .ai-hud-status-dot {
+  background: #f87171;
+}
+
+@keyframes hud-dot-pulse {
+  from { opacity: 0.5; transform: scale(0.85); }
+  to { opacity: 1; transform: scale(1.15); }
+}
+
+.ai-hud-status-title {
+  font-family: var(--font-brand);
+  font-size: 11px;
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ai-hud-status-bar__actions {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.ai-hud-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  font-size: 10px;
+  font-weight: var(--weight-medium);
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: transform var(--duration-press) var(--ease-emil-out),
+              background var(--duration-fast),
+              color var(--duration-fast);
+}
+
+.ai-hud-action-btn:active {
+  transform: scale(0.94);
+}
+
+.ai-hud-action-btn--takeover {
+  background: rgba(251, 191, 36, 0.15);
+  border-color: rgba(251, 191, 36, 0.35);
+  color: #fde68a;
+}
+
+.ai-hud-action-btn--takeover:hover {
+  background: rgba(251, 191, 36, 0.25);
+  color: #ffffff;
+}
+
+.ai-hud-action-btn--stop {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.35);
+  color: #fca5a5;
+}
+
+.ai-hud-action-btn--stop:hover {
+  background: rgba(239, 68, 68, 0.25);
+  color: #ffffff;
+}
+
+.ai-hud-action-btn--resume {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.35);
+  color: #a7f3d0;
+}
+
+.ai-hud-action-btn--resume:hover {
+  background: rgba(16, 185, 129, 0.25);
+  color: #ffffff;
+}
+
+.ai-hud-action-btn--reset {
+  background: rgba(218, 98, 125, 0.15);
+  border-color: rgba(218, 98, 125, 0.3);
+  color: var(--kage-peach);
+}
+
+.ai-hud-action-btn--reset:hover {
+  background: rgba(218, 98, 125, 0.25);
+  color: #ffffff;
+}
+
+/* ─── Action Execution Trace Card (Deterministic Verifier) ──────── */
+.ai-action-trace-card {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  background: rgba(20, 5, 12, 0.8);
+  border: 1px solid rgba(218, 98, 125, 0.25);
+  border-radius: var(--radius-md);
+  padding: 8px 10px;
+  margin-bottom: 8px;
+}
+
+.ai-action-trace-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.trace-tool-id {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: var(--weight-bold);
+  color: var(--kage-peach);
+}
+
+.trace-verifier-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: var(--weight-semibold);
+  padding: 1px 5px;
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+}
+
+.trace-verifier-badge--pass {
+  background: rgba(16, 185, 129, 0.18);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #34d399;
+}
+
+.trace-verifier-badge--fail {
+  background: rgba(239, 68, 68, 0.18);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #f87171;
+}
+
+.trace-verifier-badge--retry {
+  background: rgba(251, 191, 36, 0.18);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  color: #fbbf24;
+}
+
+.trace-elapsed {
+  font-family: var(--font-data);
+  font-size: 10px;
+  color: var(--color-text-muted);
+}
+
+.ai-action-trace-card__ids {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--color-text-secondary);
+}
+
+.trace-id strong {
+  color: var(--color-text-muted);
+}
+
+.ai-action-trace-card__effect {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  color: var(--color-text-secondary);
+  background: rgba(43, 14, 22, 0.5);
+  border-radius: var(--radius-sm);
+  padding: 3px 6px;
+  border-left: 2px solid var(--color-accent-primary);
+}
+
+.trace-effect-icon {
+  color: var(--kage-rose);
+  flex-shrink: 0;
+}
+
+/* ─── Avatar status pulse ─────────────────────────────────────────── */
+.ai-copilot-card__status-dot--active {
+  animation: hud-dot-pulse 0.9s infinite alternate;
+  box-shadow: 0 0 8px var(--kage-rose);
+}
+
+.trace-badges-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.trace-verifier-badge--unknown {
+  background: rgba(148, 163, 184, 0.18);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  color: #cbd5e1;
+}
+
+.trace-recovery-badge {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: var(--radius-sm);
+  background: rgba(218, 98, 125, 0.2);
+  border: 1px solid rgba(218, 98, 125, 0.35);
+  color: var(--kage-peach);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.ai-action-trace-card__lineage {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--color-text-secondary);
+  background: rgba(15, 3, 8, 0.55);
+  padding: 3px 6px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(122, 58, 82, 0.3);
+}
+
+.trace-lineage-step {
+  color: #93c5fd;
+  font-weight: 600;
+}
+
+.trace-lineage-sep {
+  color: var(--color-text-muted);
+  font-size: 9px;
+}
+
+.trace-lineage-req strong,
+.trace-lineage-exec strong,
+.trace-lineage-audit strong,
+.trace-lineage-vfy strong {
+  color: var(--color-text-muted);
+}
+
+.trace-lineage-vfy {
+  color: #86efac;
+}

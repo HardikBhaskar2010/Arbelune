@@ -338,3 +338,30 @@ export async function escalateSession(payload: {
   return invoke<boolean>("escalate_session", { payload });
 }
 
+export interface TaskControlPayload {
+  task_id?: string;
+}
+
+/**
+ * Trigger STOP linearization point for designated task or global admission gate (INV-09).
+ * Command: `task_stop`
+ */
+export async function taskStop(payload: TaskControlPayload): Promise<boolean> {
+  return invoke<boolean>("task_stop", { payload });
+}
+
+/**
+ * Lock admission gate for exclusive human takeover (INV-09).
+ * Command: `task_takeover`
+ */
+export async function taskTakeover(payload: TaskControlPayload): Promise<boolean> {
+  return invoke<boolean>("task_takeover", { payload });
+}
+
+/**
+ * Reopen admission gate and resume autonomous agent (INV-09, GATE-11-E).
+ * Command: `task_resume`
+ */
+export async function taskResume(payload: TaskControlPayload): Promise<boolean> {
+  return invoke<boolean>("task_resume", { payload });
+}

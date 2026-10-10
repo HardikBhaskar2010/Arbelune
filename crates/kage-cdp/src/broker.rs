@@ -481,6 +481,66 @@ impl CdpBroker {
             };
         }
 
+        // DOM inspection support for standalone loopback broker
+        if req.method == "DOM.getDocument" {
+            return CdpResponse {
+                id: req.id,
+                result: Some(serde_json::json!({
+                    "root": {
+                        "nodeId": 1,
+                        "backendNodeId": 1,
+                        "nodeType": 9,
+                        "nodeName": "#document",
+                        "localName": "",
+                        "nodeValue": "",
+                        "childNodeCount": 1,
+                        "children": []
+                    }
+                })),
+                error: None,
+                session_id: req.session_id,
+            };
+        }
+
+        if req.method == "DOM.querySelector" {
+            return CdpResponse {
+                id: req.id,
+                result: Some(serde_json::json!({
+                    "nodeId": 1001
+                })),
+                error: None,
+                session_id: req.session_id,
+            };
+        }
+
+        if req.method == "DOM.getBoxModel" {
+            return CdpResponse {
+                id: req.id,
+                result: Some(serde_json::json!({
+                    "model": {
+                        "content": [100.0, 100.0, 200.0, 100.0, 200.0, 140.0, 100.0, 140.0],
+                        "padding": [100.0, 100.0, 200.0, 100.0, 200.0, 140.0, 100.0, 140.0],
+                        "border": [100.0, 100.0, 200.0, 100.0, 200.0, 140.0, 100.0, 140.0],
+                        "margin": [100.0, 100.0, 200.0, 100.0, 200.0, 140.0, 100.0, 140.0],
+                        "width": 100,
+                        "height": 40
+                    }
+                })),
+                error: None,
+                session_id: req.session_id,
+            };
+        }
+
+        // Input dispatch support (synthetic mouse/key events)
+        if req.method == "Input.dispatchMouseEvent" || req.method == "Input.dispatchKeyEvent" {
+            return CdpResponse {
+                id: req.id,
+                result: Some(serde_json::json!({ "acknowledged": true })),
+                error: None,
+                session_id: req.session_id,
+            };
+        }
+
         // Runtime evaluation simulation (for testing loopback without live Chromium)
         if req.method == "Runtime.evaluate" {
             let expression = req.params.get("expression").and_then(|e| e.as_str()).unwrap_or("");

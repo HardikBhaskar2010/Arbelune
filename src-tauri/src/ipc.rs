@@ -745,5 +745,140 @@ pub async fn escalate_session(
     Ok(true)
 }
 
+// ---------------------------------------------------------------------------
+// Task Supervisory Commands (INV-09, GATE-11-A..E)
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct TaskControlPayload {
+    pub task_id: Option<String>,
+}
+
+/// Direct execution handler for task_stop IPC command logic.
+pub fn handle_task_stop(payload: TaskControlPayload, bus: &Arc<ToolBus>) -> Result<bool, String> {
+    if let Some(task_id) = payload.task_id {
+        bus.admission_registry().seal_task(&task_id);
+    } else {
+        bus.admission_gate().seal_cancelled();
+    }
+    Ok(true)
+}
+
+/// Direct execution handler for task_takeover IPC command logic.
+pub fn handle_task_takeover(payload: TaskControlPayload, bus: &Arc<ToolBus>) -> Result<bool, String> {
+    let gate = bus.admission_registry().get_gate(payload.task_id.as_deref());
+    gate.enter_takeover();
+    Ok(true)
+}
+
+/// Direct execution handler for task_resume IPC command logic.
+pub fn handle_task_resume(payload: TaskControlPayload, bus: &Arc<ToolBus>) -> Result<bool, String> {
+    let gate = bus.admission_registry().get_gate(payload.task_id.as_deref());
+    gate.resume_open();
+    Ok(true)
+}
+
+/// IPC command: `kage:task:stop`
+///
+/// Engages STOP linearization point for the designated task (or global gate).
+/// Future dispatch admissions closed immediately; in-flight mutations settle cleanly.
+#[tauri::command]
+pub async fn task_stop(
+    payload: TaskControlPayload,
+    bus: State<'_, Arc<ToolBus>>,
+) -> Result<bool, String> {
+    handle_task_stop(payload, &bus)
+}
+
+/// IPC command: `kage:task:takeover`
+///
+/// Locks the admission gate for exclusive human intervention.
+#[tauri::command]
+pub async fn task_takeover(
+    payload: TaskControlPayload,
+    bus: State<'_, Arc<ToolBus>>,
+) -> Result<bool, String> {
+    handle_task_takeover(payload, &bus)
+}
+
+/// IPC command: `kage:task:resume`
+///
+/// Reopens the admission gate and synchronizes autonomous execution.
+#[tauri::command]
+pub async fn task_resume(
+    payload: TaskControlPayload,
+    bus: State<'_, Arc<ToolBus>>,
+) -> Result<bool, String> {
+    handle_task_resume(payload, &bus)
+}
+
+/// Dispatches a raw JSON IPC command payload exactly as received across the Tauri IPC boundary
+/// from React's `@tauri-apps/api/core#invoke(command, payload)`.
+///
+/// This tests the complete serialization, deserialization, command routing, and backend execution
+/// path across the IPC boundary for task supervisory controls and tool execution.
+pub async fn dispatch_ipc_command(
+    command: &str,
+    payload_json: serde_json::Value,
+    bus: &Arc<ToolBus>,
+) -> Result<serde_json::Value, String> {
+    match command {
+        "task_stop" => {
+            let payload: TaskControlPayload = if let Some(inner) = payload_json.get("payload") {
+                serde_json::from_value(inner.clone()).map_err(|e| e.to_string())?
+            } else {
+                serde_json::from_value(payload_json).map_err(|e| e.to_string())?
+            };
+            let res = handle_task_stop(payload, bus)?;
+            Ok(serde_json::to_value(res).unwrap_or(serde_json::Value::Bool(true)))
+        }
+        "task_takeover" => {
+            let payload: TaskControlPayload = if let Some(inner) = payload_json.get("payload") {
+                serde_json::from_value(inner.clone()).map_err(|e| e.to_string())?
+            } else {
+                serde_json::from_value(payload_json).map_err(|e| e.to_string())?
+            };
+            let res = handle_task_takeover(payload, bus)?;
+            Ok(serde_json::to_value(res).unwrap_or(serde_json::Value::Bool(true)))
+        }
+        "task_resume" => {
+            let payload: TaskControlPayload = if let Some(inner) = payload_json.get("payload") {
+                serde_json::from_value(inner.clone()).map_err(|e| e.to_string())?
+            } else {
+                serde_json::from_value(payload_json).map_err(|e| e.to_string())?
+            };
+            let res = handle_task_resume(payload, bus)?;
+            Ok(serde_json::to_value(res).unwrap_or(serde_json::Value::Bool(true)))
+        }
+        "tool_dispatch" => {
+            let payload: ToolDispatchPayload = if let Some(inner) = payload_json.get("payload") {
+                serde_json::from_value(inner.clone()).map_err(|e| e.to_string())?
+            } else {
+                serde_json::from_value(payload_json).map_err(|e| e.to_string())?
+            };
+            let request = ToolRequest {
+                task_id: payload.task_id,
+                step_id: payload.step_id,
+                execution_id: payload.execution_id,
+                tool_id: payload.tool_id,
+                args: payload.args,
+                request_id: payload.request_id,
+                reason: payload.reason,
+            };
+            let ctx = PartialPolicyContext::new(
+                "ai_subsystem",
+                payload.session_id,
+                payload.workspace_id,
+                payload.session_granted,
+            );
+            bus.dispatch(request, ctx, tokio_util::sync::CancellationToken::new())
+                .await
+                .map(|resp| serde_json::to_value(resp).unwrap_or_default())
+                .map_err(|e| e.to_string())
+        }
+        other => Err(format!("Unknown IPC command: {other}")),
+    }
+}
+
 
 

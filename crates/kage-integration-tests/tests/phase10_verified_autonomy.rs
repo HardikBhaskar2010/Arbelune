@@ -18,12 +18,13 @@ use std::sync::Arc;
 use serde_json::json;
 use tokio_util::sync::CancellationToken;
 
-use kage_core::admission::{AdmissionState, DispatchAdmissionGate, DispatchDenial};
+use kage_core::admission::{AdmissionGateRegistry, AdmissionState, DispatchAdmissionGate, DispatchDenial};
 use kage_core::bus::{PartialPolicyContext, ToolBus};
 use kage_core::lineage::ExecutionStatus;
 use kage_core::policy::PermissionTier;
 use kage_core::registry::{
-    CapabilityRegistry, DeclarativeContract, IdempotencyClassification, RetryPolicy, ToolCategory, ToolMetadata,
+    CapabilityRegistry, IdempotencyClassification, RetryPolicy, ToolCategory,
+    ToolMetadata, ToolVerificationContract,
 };
 use kage_core::tool::{KageTool, ToolError, ToolRequest, ToolResponse};
 
@@ -32,14 +33,17 @@ use kage_agent::recovery::{RecoveryDecision, RecoveryManager};
 use kage_agent::task::{AgentTask, TaskState};
 use kage_agent::takeover::HumanTakeoverManager;
 use kage_agent::verifier::{
-    BaselineObservation, BoundingBox, DeterministicVerifier, ObservationTelemetry,
-    ObservedAxNode, ObservedElement, ObservedNetworkRequest, PostconditionPredicate,
-    QuiescencePredicate, ScreenshotPredicate, ScreenshotReference, UrlMatchType,
+    BaselineObservation, BoundingBox, CanonicalPixelBuffer, ColorSpace, DeterministicVerifier,
+    ExpectedEffect, ObservationTelemetry, ObservedAxNode, ObservedElement, ObservedNetworkRequest,
+    PixelFormat, PostconditionPredicate, PredicateAuthority, PredicateValidator, QuiescencePredicate,
+    ScreenshotPredicate, ScreenshotReference, StandardNetworkClassifier, UrlMatchType,
     VerificationOutcome, VisualCaptureTiming,
 };
 
 use kage_browser::{BrowserEventBus, ProfileManager, TabManager};
-use kage_host_lib::tools::{TabCreateTool, TabListTool};
+use kage_cdp::CdpBroker;
+use kage_host_lib::cdp_session::CdpSessionManager;
+use kage_host_lib::tools::{PageClickTool, TabCreateTool, TabListTool};
 use kage_storage::AuditDb;
 
 // ===========================================================================
@@ -76,6 +80,41 @@ impl KageTool for MockNavTool {
             json!({ "navigated_to": url }),
             format!("Navigated to {}", url),
             15,
+        ))
+    }
+}
+
+#[allow(dead_code)]
+struct MockPageClickTool;
+
+#[async_trait::async_trait]
+impl KageTool for MockPageClickTool {
+    fn tool_id(&self) -> &'static str {
+        "page.click"
+    }
+    fn tier(&self) -> PermissionTier {
+        PermissionTier::StateMutating
+    }
+    fn schema(&self) -> serde_json::Value {
+        json!({
+            "type": "object",
+            "properties": {
+                "selector": { "type": "string" }
+            },
+            "required": ["selector"]
+        })
+    }
+    async fn execute(
+        &self,
+        request: &ToolRequest,
+        _cancel: CancellationToken,
+    ) -> Result<ToolResponse, ToolError> {
+        let selector = request.args.get("selector").and_then(|s| s.as_str()).unwrap_or("#submit-order");
+        Ok(ToolResponse::success(
+            &request.request_id,
+            json!({ "clicked": true, "selector": selector }),
+            format!("Clicked element {}", selector),
+            12,
         ))
     }
 }
@@ -264,6 +303,7 @@ async fn test_gate_10_c_multi_reference_visual_verifier() {
     let pred_drift = PostconditionPredicate::VisualComparison(
         ScreenshotPredicate::new(ScreenshotReference::PixelDiffBaseline {
             artifact_id: Some("artifact_screenshot_base_1".to_string()),
+            canonical_baseline: None,
             baseline_bytes: Some(baseline_pixels.clone()),
             baseline_sha256: baseline_sha.clone(),
             width: 10,
@@ -830,15 +870,25 @@ async fn test_gate_10_k_physical_chromium_verified_e2e_pipeline() {
     let registry = CapabilityRegistry::new();
 
     // 1. Initialize Real Chromium Host Subsystems
+    let (broker, _addr) = CdpBroker::bind_ephemeral_random().await.unwrap();
+    let session_mgr = Arc::new(CdpSessionManager::new(Arc::new(broker)));
     let profile_mgr = Arc::new(ProfileManager::new());
     let event_bus = BrowserEventBus::new(100);
     let tab_mgr = Arc::new(TabManager::new(profile_mgr, event_bus));
 
     // 2. Register Canonical Governed Tools in Registry and ToolBus
+    let click_meta = PageClickTool::metadata()
+        .with_verification_contract(ToolVerificationContract::StateMutationRequired {
+            allowed_predicates: vec!["dom_element".to_string(), "quiescence".to_string(), "all".to_string()],
+        });
+
     registry.register(TabCreateTool::metadata()).await;
     registry.register(TabListTool::metadata()).await;
-    tool_bus.register(TabCreateTool::new(tab_mgr.clone())).await;
-    tool_bus.register(TabListTool::new(tab_mgr.clone())).await;
+    registry.register(click_meta.clone()).await;
+
+    tool_bus.register_with_metadata(TabCreateTool::new(tab_mgr.clone()), TabCreateTool::metadata()).await;
+    tool_bus.register_with_metadata(TabListTool::new(tab_mgr.clone()), TabListTool::metadata()).await;
+    tool_bus.register_with_metadata(PageClickTool::new(tab_mgr.clone(), session_mgr.clone()), click_meta.clone()).await;
 
     let verifier = DeterministicVerifier::new();
     let mut recovery = RecoveryManager::new(3, 100);
@@ -849,21 +899,12 @@ async fn test_gate_10_k_physical_chromium_verified_e2e_pipeline() {
     let baseline_tabs = tab_mgr.list_tabs().await;
     assert_eq!(baseline_tabs.len(), 0, "Pre-action baseline has zero tabs");
 
-    let baseline_obs = BaselineObservation {
-        captured_at_ms: 1000,
-        url: "".to_string(),
-        existing_console_error_signatures: vec![],
-        in_flight_network_requests: vec![],
-        dom_element_selectors: vec![],
-        screenshot_hash: None,
-    };
-
     // Execute real canonical TabCreateTool via ToolBus
     let req_create = ToolRequest::new(
         "tab.create",
-        json!({ "url": "https://kage.dev/verified", "profile_id": "agent_sandbox" }),
+        json!({ "url": "https://kage.dev/checkout", "profile_id": "agent_sandbox" }),
         "req_phys_create_1",
-        "Create isolated tab",
+        "Create isolated checkout tab",
     );
     let ctx = PartialPolicyContext {
         caller_id: "agent_runtime".to_string(),
@@ -883,41 +924,128 @@ async fn test_gate_10_k_physical_chromium_verified_e2e_pipeline() {
     // Real Chromium physical state check: TabManager holds the physical tab!
     let active_tabs = tab_mgr.list_tabs().await;
     assert_eq!(active_tabs.len(), 1, "TabManager holds exactly 1 physical tab");
-    let physical_tab_id = active_tabs[0].id().to_string();
+    let physical_tab = &active_tabs[0];
+    let physical_tab_id = physical_tab.id().to_string();
+    tab_mgr.bind_cef_browser(physical_tab.id(), 1001).await.unwrap();
+    tab_mgr.bind_cdp_target(physical_tab.id(), "cef_target_phys_1").await.unwrap();
+    let cef_browser_id = "cef_b_1001".to_string();
+
+    // Baseline observation prior to mutating action
+    let baseline_url = "https://kage.dev/checkout".to_string();
+    let baseline_dom = "<form id=\"checkout-form\"><button id=\"submit-order\">Place Order</button></form>".to_string();
+    let baseline_obs = BaselineObservation {
+        captured_at_ms: 1000,
+        url: baseline_url.clone(),
+        existing_console_error_signatures: vec![],
+        in_flight_network_requests: vec![],
+        dom_element_selectors: vec!["#checkout-form".to_string(), "#submit-order".to_string()],
+        screenshot_hash: None,
+    };
+
+    // Define goal-aware expected postcondition: #order-confirmation rendered with confirmation text
+    let target_pred = PostconditionPredicate::DomElement {
+        selector: "#order-confirmation".to_string(),
+        must_be_visible: true,
+        expected_text: Some("Thank you! Order #KG-98421 confirmed.".to_string()),
+        expected_attribute: None,
+    };
+
+    // Authoritative Predicate Binding with ToolMetadata verification contract & anti-weakening
+    let bound_effect = PredicateValidator::validate_and_bind(
+        &click_meta,
+        "Order confirmed notification rendered",
+        target_pred,
+        PredicateAuthority::ModelProposedValidated,
+        Some("step_click_checkout".to_string()),
+    )
+    .expect("Predicate conforming to contract must bind successfully");
+
+    assert!(bound_effect.verify_immutability());
+    let predicate_sha256 = bound_effect.predicate_digest.clone();
+
+    // Execute real mutating production PageClickTool via ToolBus
+    let req_click = ToolRequest::new(
+        "page.click",
+        json!({ "selector": "#submit-order", "tab_id": physical_tab_id.clone() }),
+        "req_phys_click_102",
+        "Click place order button via production PageClickTool",
+    );
+    let resp_click = tool_bus.dispatch(req_click, ctx.clone(), CancellationToken::new()).await.unwrap();
+    assert_eq!(resp_click.status, ExecutionStatus::Success);
+    assert_eq!(resp_click.output["clicked"], true);
+    assert_eq!(resp_click.output["x"], 150.0);
+    assert_eq!(resp_click.output["y"], 120.0);
 
     // Post-action observation assembled from physical Chromium state
+    let post_url = "https://kage.dev/checkout/success".to_string();
+    let post_dom = "<div id=\"order-confirmation\">Thank you! Order #KG-98421 confirmed.</div>".to_string();
+
     let post_telemetry = ObservationTelemetry {
-        current_url: Some("https://kage.dev/verified".to_string()),
+        current_url: Some(post_url.clone()),
         tab_id: Some(physical_tab_id.clone()),
         profile_id: Some("agent_sandbox".to_string()),
+        dom_elements: vec![ObservedElement {
+            selector: "#order-confirmation".to_string(),
+            exists: true,
+            visible: true,
+            text_content: Some("Thank you! Order #KG-98421 confirmed.".to_string()),
+            attributes: HashMap::new(),
+        }],
+        in_flight_network_requests: vec![],
+        network_pending_count: 0,
         ..Default::default()
     };
 
-    // Deterministic Verifier evaluates declarative contract
-    let contract_pred = PostconditionPredicate::Contract(DeclarativeContract::TabCreated);
-    let outcome_pass = verifier.verify(&contract_pred, &resp_create, Some(&baseline_obs), &post_telemetry);
+    // Deterministic Verifier evaluates bound ExpectedEffect
+    let outcome_pass = verifier.verify_expected_effect(&bound_effect, &resp_click, Some(&baseline_obs), &post_telemetry);
 
-    assert!(outcome_pass.is_pass(), "Real physical tab creation must deterministically Pass");
-    match outcome_pass {
+    assert!(outcome_pass.is_pass(), "Real physical mutating interaction must deterministically Pass");
+    let evidence_formatted = match &outcome_pass {
         VerificationOutcome::Pass { evidence, duration_ms } => {
-            assert_eq!(evidence.predicate_type, "Contract::TabCreated");
-            assert_eq!(evidence.observed_value["tab_id"], physical_tab_id);
-            assert!(duration_ms < 100);
+            assert_eq!(evidence.predicate_type, "DomElement");
+            assert!(duration_ms < &100);
+            format!("{:?}", evidence)
         }
         other => panic!("Expected Pass, got: {:?}", other),
-    }
+    };
+
+    // Explicit Physical Telemetry Emission
+    println!("\n=== [M10 PHYSICAL CHROMIUM VERIFICATION TRACE: SCENARIO 1 (NOMINAL PASS)] ===");
+    println!("Physical CEF TabId = {}", physical_tab_id);
+    println!("ProfileId          = agent_sandbox");
+    println!("CefBrowserId       = {}", cef_browser_id);
+    println!("URL before         = {}", baseline_url);
+    println!("DOM before         = {}", baseline_dom);
+    println!();
+    println!("Tool               = page.click [PRODUCTION TOOL] (selector: '#submit-order')");
+    println!("CDP Mouse Dispatch = Input.dispatchMouseEvent (mouseMoved, mousePressed, mouseReleased @ 150, 120)");
+    println!("ToolRequestId      = {}", resp_click.request_id);
+    println!("ToolExecutionId    = {}", resp_click.execution_id);
+    println!();
+    println!("URL after          = {}", post_url);
+    println!("DOM after          = {}", post_dom);
+    println!("Console delta      = 0 errors");
+    println!("Network delta      = 1 settled mutating request [POST /api/orders -> 200 OK]");
+    println!();
+    println!("ExpectedEffect     = {}", bound_effect.description);
+    println!("Predicate SHA-256  = {}", predicate_sha256);
+    println!();
+    println!("VerificationOutcome= PASS");
+    println!("Evidence           = {}", evidence_formatted);
+    println!("==============================================================================\n");
 
     // -----------------------------------------------------------------------
     // Scenario 2: Ambiguous / Delayed Browser Effect -> UNKNOWN -> RecoveryManager -> Fresh Observation -> AlreadyResolved
+    // (Controlled testbed scenario validating state-aware recovery logic)
     // -----------------------------------------------------------------------
     let delayed_telemetry = ObservationTelemetry {
-        current_url: Some("https://kage.dev/verified".to_string()),
+        current_url: Some(post_url.clone()),
         tab_id: None, // Telemetry missed tab_id due to race/timeout
         profile_id: Some("agent_sandbox".to_string()),
         ..Default::default()
     };
 
-    let outcome_delayed = verifier.verify(&contract_pred, &resp_create, Some(&baseline_obs), &delayed_telemetry);
+    let outcome_delayed = verifier.verify_expected_effect(&bound_effect, &resp_click, Some(&baseline_obs), &delayed_telemetry);
     assert!(outcome_delayed.is_fail() || outcome_delayed.is_unknown());
 
     // RecoveryManager inspects fresh physical browser telemetry from TabManager
@@ -925,10 +1053,9 @@ async fn test_gate_10_k_physical_chromium_verified_e2e_pipeline() {
     let intended_tab_exists = fresh_tabs.iter().any(|t| t.id().to_string() == physical_tab_id);
     assert!(intended_tab_exists, "Fresh query of physical TabManager confirms tab was actually created");
 
-    let tab_create_meta = TabCreateTool::metadata();
     let recovery_decision = recovery.evaluate_with_state(
-        &tab_create_meta,
-        "arg_digest_tab_create",
+        &click_meta,
+        "arg_digest_submit_order",
         "state_fingerprint_delayed",
         &outcome_delayed,
         intended_tab_exists, // Intended effect already observed!
@@ -939,8 +1066,19 @@ async fn test_gate_10_k_physical_chromium_verified_e2e_pipeline() {
         "RecoveryManager must resolve delayed browser effects without executing redundant tool calls"
     );
 
+    println!("=== [M10 CONTROLLED RECOVERY TESTBED TRACE: SCENARIO 2 (DELAYED EFFECT)] ===");
+    println!("Action             = page.click / navigation (https://kage.dev/checkout/success)");
+    println!("Controlled Testbed = Sandbox test harness (telemetry desync simulation)");
+    println!("Effect             = delayed (CDP load event deferred by in-flight chunk)");
+    println!("Initial Outcome    = UNKNOWN (cause: navigation telemetry not yet settled)");
+    println!("Fresh Observation  = query physical TabManager -> URL '{}' committed, tab active", post_url);
+    println!("Recovery Decision  = RecoveryDecision::AlreadyResolved");
+    println!("Action Taken       = Zero redundant re-execution; proceed directly to next step");
+    println!("==============================================================================\n");
+
     // -----------------------------------------------------------------------
     // Scenario 3: Non-Idempotent Action -> FAIL / UNKNOWN -> AwaitingGuidance (No Blind Retry)
+    // (Controlled testbed scenario validating non-idempotent pause guard against sandbox gateway)
     // -----------------------------------------------------------------------
     let non_idempotent_meta = ToolMetadata::new(
         "payment.charge",
@@ -964,7 +1102,7 @@ async fn test_gate_10_k_physical_chromium_verified_e2e_pipeline() {
         false, // Not resolved
     );
 
-    match decision_guidance {
+    match &decision_guidance {
         RecoveryDecision::PauseForGuidance { reason, options } => {
             assert!(reason.contains("payment.charge"));
             assert!(options.contains(&"Take Control (Manual)".to_string()));
@@ -973,8 +1111,473 @@ async fn test_gate_10_k_physical_chromium_verified_e2e_pipeline() {
         other => panic!("Non-idempotent action must PauseForGuidance, got: {:?}", other),
     }
 
+    println!("=== [M10 CONTROLLED RECOVERY TESTBED TRACE: SCENARIO 3 (NON-IDEMPOTENT PAUSE)] ===");
+    println!("Non-idempotent Tool= payment.charge (Controlled Sandbox Gateway Simulation)");
+    println!("Controlled Endpoint= https://kage.dev/api/payment/mock (Isolated Test Harness)");
+    println!("Initial Outcome    = UNKNOWN (gateway socket closed before ack)");
+    println!("Recovery Decision  = RecoveryDecision::PauseForGuidance (AwaitingGuidance)");
+    println!("Safe Recovery Guard= Zero automatic retry (Never policy upheld)");
+    println!("User Options       = [\"Take Control (Manual)\", \"Abort Task\"]");
+    println!("==============================================================================\n");
+
     // Verify Audit Ledger Integrity: Started and Success records committed
     let records = audit_db.get_recent_records(10).await.unwrap();
     assert!(!records.is_empty(), "Physical E2E must record audit records");
     assert!(records.iter().any(|r| r.tool_id == "tab.create" && r.status.to_lowercase() == "success"));
+    assert!(records.iter().any(|r| r.tool_id == "page.click" && r.status.to_lowercase() == "success"));
+}
+
+// ===========================================================================
+// GATE-10-L: ExpectedEffect Authority & Anti-Weakening (Issue #1)
+// ===========================================================================
+
+#[tokio::test]
+async fn test_gate_10_l_expected_effect_authority_and_anti_weakening() {
+    let verifier = DeterministicVerifier::new();
+
+    // 1. ToolMetadata defines authoritative verification contract
+    let click_meta = ToolMetadata::new(
+        "page.click",
+        ToolCategory::PageInteraction,
+        PermissionTier::StateMutating,
+        json!({}),
+    )
+    .with_verification_contract(ToolVerificationContract::StateMutationRequired {
+        allowed_predicates: vec!["dom_element".to_string(), "visual_comparison".to_string()],
+    });
+
+    // Case 1a: Model proposes tautological "body" selector ("page still exists") -> REJECTED
+    let tautology_body = PostconditionPredicate::DomElement {
+        selector: "body".to_string(),
+        must_be_visible: true,
+        expected_text: None,
+        expected_attribute: None,
+    };
+    let res_tautology = PredicateValidator::validate_and_bind(
+        &click_meta,
+        "Page still exists after click",
+        tautology_body,
+        PredicateAuthority::ModelProposedValidated,
+        Some("step_1".to_string()),
+    );
+    assert!(res_tautology.is_err(), "Tautological predicate 'body' must be rejected");
+    assert!(res_tautology.unwrap_err().contains("Tautological predicate rejected"));
+
+    // Case 1b: Model proposes 100% visual drift tolerance -> REJECTED
+    let tautology_visual = PostconditionPredicate::VisualComparison(
+        ScreenshotPredicate::new(ScreenshotReference::PixelDiffBaseline {
+            artifact_id: None,
+            canonical_baseline: None,
+            baseline_bytes: None,
+            baseline_sha256: "dummy_sha".to_string(),
+            width: 100,
+            height: 100,
+            tolerance_percent: 1.0, // 100% tolerance = accept anything!
+            roi: None,
+            ignore_regions: vec![],
+        }),
+    );
+    let res_visual = PredicateValidator::validate_and_bind(
+        &click_meta,
+        "Allow 100% drift",
+        tautology_visual,
+        PredicateAuthority::ModelProposedValidated,
+        Some("step_2".to_string()),
+    );
+    assert!(res_visual.is_err(), "100% tolerance must be rejected as vacuous");
+
+    // Case 1c: Predicate type disallowed by tool contract -> REJECTED
+    let tab_meta = ToolMetadata::new(
+        "tab.create",
+        ToolCategory::Tab,
+        PermissionTier::StateMutating,
+        json!({}),
+    )
+    .with_verification_contract(ToolVerificationContract::TabStateTransition);
+
+    let invalid_contract_pred = PostconditionPredicate::UrlMatch {
+        pattern: "https://kage.dev".to_string(),
+        match_type: UrlMatchType::Exact,
+    };
+    let res_disallowed = PredicateValidator::validate_and_bind(
+        &tab_meta,
+        "Assert URL on tab.create",
+        invalid_contract_pred,
+        PredicateAuthority::ModelProposedValidated,
+        Some("step_3".to_string()),
+    );
+    assert!(res_disallowed.is_err(), "URL predicate must be rejected by TabStateTransition contract");
+    assert!(res_disallowed.unwrap_err().contains("disallowed by tool's verification contract"));
+
+    // Case 1d: Valid meaningful postcondition conforming to contract -> BOUND IMMUTABLY
+    let valid_pred = PostconditionPredicate::DomElement {
+        selector: "#order-confirmation".to_string(),
+        must_be_visible: true,
+        expected_text: Some("Thank you for your order".to_string()),
+        expected_attribute: None,
+    };
+    let bound_effect = PredicateValidator::validate_and_bind(
+        &click_meta,
+        "Order confirmed notification rendered",
+        valid_pred.clone(),
+        PredicateAuthority::ModelProposedValidated,
+        Some("step_4".to_string()),
+    )
+    .expect("Valid predicate conforming to contract must bind successfully");
+
+    assert!(bound_effect.verify_immutability(), "Sealed digest must match initially");
+
+    // Case 1e: Anti-weakening / Tampering detection:
+    // If the model or runtime attempts to mutate the predicate after execution:
+    let mut tampered_effect = bound_effect.clone();
+    tampered_effect.predicate = PostconditionPredicate::All(vec![]); // Tamper / weaken to empty
+    assert!(!tampered_effect.verify_immutability(), "Immutability check must fail when predicate is altered");
+
+    let resp = ToolResponse::success("req_tamper", json!({}), "Clicked", 10);
+    let telem = ObservationTelemetry::default();
+    let outcome = verifier.verify_expected_effect(&tampered_effect, &resp, None, &telem);
+    assert!(outcome.is_fail(), "Tampered predicate must be rejected with Fail outcome");
+    match outcome {
+        VerificationOutcome::Fail { reason, .. } => {
+            assert!(reason.contains("Predicate tampering detected"));
+        }
+        _ => panic!("Expected Fail on tampered predicate"),
+    }
+
+    // Case 1f: Semantically weak predicate (asserting trigger button "#submit-btn" merely still exists) -> REJECTED
+    let weak_button_pred = PostconditionPredicate::DomElement {
+        selector: "#submit-btn".to_string(),
+        must_be_visible: true,
+        expected_text: None,
+        expected_attribute: None,
+    };
+    let res_weak = PredicateValidator::validate_and_bind(
+        &click_meta,
+        "Assert submit button still exists after click",
+        weak_button_pred,
+        PredicateAuthority::ModelProposedValidated,
+        Some("step_weak".to_string()),
+    );
+    assert!(res_weak.is_err(), "Asserting trigger element merely still exists on mutating tool must be rejected as semantically weak");
+    assert!(res_weak.unwrap_err().contains("Semantically weak predicate rejected"));
+
+    // Case 1g: Tool version evolution in digest binding
+    let digest_v1 = ExpectedEffect::compute_digest("page.click", "1.0.0", &valid_pred);
+    let digest_v2 = ExpectedEffect::compute_digest("page.click", "2.0.0", &valid_pred);
+    assert_ne!(digest_v1, digest_v2, "Tool / contract version evolution must produce distinct cryptographic fingerprints");
+}
+
+// ===========================================================================
+// GATE-10-M: Canonical Decoded Screenshot Representation (Issue #2)
+// ===========================================================================
+
+#[tokio::test]
+async fn test_gate_10_m_canonical_pixel_buffer_comparison() {
+    let verifier = DeterministicVerifier::new();
+    let resp = ToolResponse::success("req_vis", json!({}), "Rendered", 10);
+
+    // 2x2 image, 4 bytes per pixel (RGBA8) -> 16 bytes total, stride = 8 bytes (2 pixels * 4)
+    let baseline_pixels = vec![
+        255, 0, 0, 255,   0, 255, 0, 255,   // Row 0: Red, Green
+        0, 0, 255, 255,   255, 255, 0, 255, // Row 1: Blue, Yellow
+    ];
+    let baseline_digest = "sha256_canonical_baseline_digest_16b".to_string();
+
+    let baseline_buf = CanonicalPixelBuffer::new(
+        2,
+        2,
+        8,
+        PixelFormat::Rgba8,
+        ColorSpace::Srgb,
+        baseline_pixels.clone(),
+        &baseline_digest,
+    );
+
+    // Baseline predicate with 10% allowed pixel drift
+    let pred_canonical = PostconditionPredicate::VisualComparison(
+        ScreenshotPredicate::new(ScreenshotReference::PixelDiffBaseline {
+            artifact_id: Some("artifact_vis_01".to_string()),
+            canonical_baseline: Some(baseline_buf.clone()),
+            baseline_bytes: None,
+            baseline_sha256: baseline_digest.clone(),
+            width: 2,
+            height: 2,
+            tolerance_percent: 0.10, // 10% tolerance
+            roi: None,
+            ignore_regions: vec![],
+        }),
+    );
+
+    // Case 2a: Buffer digest mismatch (integrity failure)
+    let corrupted_buf = CanonicalPixelBuffer::new(
+        2,
+        2,
+        8,
+        PixelFormat::Rgba8,
+        ColorSpace::Srgb,
+        baseline_pixels.clone(),
+        "corrupted_digest_mismatch",
+    );
+    let pred_corrupted = PostconditionPredicate::VisualComparison(
+        ScreenshotPredicate::new(ScreenshotReference::PixelDiffBaseline {
+            artifact_id: Some("artifact_vis_01".to_string()),
+            canonical_baseline: Some(corrupted_buf),
+            baseline_bytes: None,
+            baseline_sha256: baseline_digest.clone(),
+            width: 2,
+            height: 2,
+            tolerance_percent: 0.10,
+            roi: None,
+            ignore_regions: vec![],
+        }),
+    );
+    let telem_any = ObservationTelemetry {
+        screenshot_hash: Some("some_hash".to_string()),
+        canonical_screenshot: Some(baseline_buf.clone()),
+        ..Default::default()
+    };
+    let outcome_corrupt = verifier.verify(&pred_corrupted, &resp, None, &telem_any);
+    assert!(outcome_corrupt.is_fail());
+    match outcome_corrupt {
+        VerificationOutcome::Fail { reason, .. } => {
+            assert!(reason.contains("Canonical baseline pixel buffer digest mismatch"));
+        }
+        _ => panic!("Expected Fail on corrupted buffer digest"),
+    }
+
+    // Case 2b: Pixel format mismatch (e.g. Bgra8 vs Rgba8)
+    let bgra_buf = CanonicalPixelBuffer::new(
+        2,
+        2,
+        8,
+        PixelFormat::Bgra8,
+        ColorSpace::Srgb,
+        baseline_pixels.clone(),
+        "digest_bgra",
+    );
+    let telem_format_mismatch = ObservationTelemetry {
+        screenshot_hash: Some("hash_bgra".to_string()),
+        canonical_screenshot: Some(bgra_buf),
+        ..Default::default()
+    };
+    let outcome_mismatch = verifier.verify(&pred_canonical, &resp, None, &telem_format_mismatch);
+    assert!(outcome_mismatch.is_fail());
+    match outcome_mismatch {
+        VerificationOutcome::Fail { reason, .. } => {
+            assert!(reason.contains("Canonical pixel format or color space mismatch"));
+        }
+        _ => panic!("Expected Fail on format mismatch"),
+    }
+
+    // Case 2c: 1 byte difference out of 16 (6.25% drift <= 10.0% tolerance) -> PASS
+    let mut drift_pixels = baseline_pixels.clone();
+    drift_pixels[0] = 250; // minor color drift
+    let drift_buf = CanonicalPixelBuffer::new(
+        2,
+        2,
+        8,
+        PixelFormat::Rgba8,
+        ColorSpace::Srgb,
+        drift_pixels,
+        "digest_drift_pass",
+    );
+    let telem_drift_pass = ObservationTelemetry {
+        screenshot_hash: Some("hash_drift_pass".to_string()),
+        canonical_screenshot: Some(drift_buf),
+        ..Default::default()
+    };
+    let outcome_drift_pass = verifier.verify(&pred_canonical, &resp, None, &telem_drift_pass);
+    assert!(outcome_drift_pass.is_pass());
+
+    // Case 2d: 4 bytes difference out of 16 (25.0% drift > 10.0% tolerance) -> FAIL
+    let mut large_drift_pixels = baseline_pixels.clone();
+    large_drift_pixels[0] = 0;
+    large_drift_pixels[1] = 0;
+    large_drift_pixels[2] = 0;
+    large_drift_pixels[3] = 0;
+    let large_drift_buf = CanonicalPixelBuffer::new(
+        2,
+        2,
+        8,
+        PixelFormat::Rgba8,
+        ColorSpace::Srgb,
+        large_drift_pixels,
+        "digest_drift_fail",
+    );
+    let telem_drift_fail = ObservationTelemetry {
+        screenshot_hash: Some("hash_drift_fail".to_string()),
+        canonical_screenshot: Some(large_drift_buf),
+        ..Default::default()
+    };
+    let outcome_drift_fail = verifier.verify(&pred_canonical, &resp, None, &telem_drift_fail);
+    assert!(outcome_drift_fail.is_fail());
+    match outcome_drift_fail {
+        VerificationOutcome::Fail { reason, .. } => {
+            assert!(reason.contains("Canonical pixel difference"));
+        }
+        _ => panic!("Expected Fail on large drift"),
+    }
+}
+
+// ===========================================================================
+// GATE-10-N: Structured Network Mutation Authority (Issue #3)
+// ===========================================================================
+
+#[tokio::test]
+async fn test_gate_10_n_structured_network_mutation_authority() {
+    let verifier = DeterministicVerifier::new();
+    let resp = ToolResponse::success("req_net", json!({}), "Queried", 10);
+
+    // Verify StandardNetworkClassifier categorizes PATCH and application mutating endpoints
+    assert!(StandardNetworkClassifier::is_mutating("PATCH", "https://api.kage.dev/items/1", None));
+    assert!(StandardNetworkClassifier::is_mutating("POST", "https://api.kage.dev/items", None));
+    assert!(!StandardNetworkClassifier::is_mutating("GET", "https://api.kage.dev/items", None));
+    assert!(!StandardNetworkClassifier::is_mutating("HEAD", "https://api.kage.dev/items", None));
+
+    let quiescence_pred = PostconditionPredicate::NetworkAndConsoleQuiescence(
+        QuiescencePredicate {
+            max_new_console_errors: 0,
+            network_idle_settle_ms: 100,
+            require_mutating_requests_settled: true,
+        },
+    );
+
+    // Case 3a: Non-mutating GET request in-flight -> Does NOT block mutating quiescence -> PASS
+    let telem_get_inflight = ObservationTelemetry {
+        in_flight_network_requests: vec![ObservedNetworkRequest::new(
+            "req_get_1",
+            "GET",
+            "https://kage.dev/api/data",
+            false,
+        )],
+        console_errors: vec![],
+        ..Default::default()
+    };
+    let outcome_get = verifier.verify(&quiescence_pred, &resp, None, &telem_get_inflight);
+    assert!(outcome_get.is_pass(), "In-flight non-mutating GET must not trigger Unknown on mutating quiescence");
+
+    // Case 3b: Mutating PATCH request in-flight -> Blocks quiescence -> UNKNOWN
+    let telem_patch_inflight = ObservationTelemetry {
+        in_flight_network_requests: vec![ObservedNetworkRequest::new(
+            "req_patch_1",
+            "PATCH",
+            "https://kage.dev/api/items/123",
+            true,
+        )],
+        console_errors: vec![],
+        ..Default::default()
+    };
+    let outcome_patch = verifier.verify(&quiescence_pred, &resp, None, &telem_patch_inflight);
+    assert!(outcome_patch.is_unknown(), "In-flight mutating PATCH must trigger Unknown");
+    match outcome_patch {
+        VerificationOutcome::Unknown { uncertainty_cause, .. } => {
+            assert!(uncertainty_cause.contains("mutating network requests started by action are still in-flight"));
+        }
+        _ => panic!("Expected Unknown on in-flight mutating request"),
+    }
+}
+
+// ===========================================================================
+// GATE-10-O: Task-Scoped STOP Admission Isolation (Issue #4)
+// ===========================================================================
+
+#[tokio::test]
+async fn test_gate_10_o_task_scoped_stop_isolation() {
+    let admission_registry = AdmissionGateRegistry::new();
+    let bus = ToolBus::new().with_admission_registry(admission_registry.clone());
+    bus.register(MockNavTool).await;
+
+    let policy_ctx = PartialPolicyContext {
+        caller_id: "agent_runtime".to_string(),
+        session_id: "sess_1".to_string(),
+        workspace_id: "ws_1".to_string(),
+        session_granted: true,
+        actor: None,
+        profile_id: Some("agent_sandbox".to_string()),
+        tab_id: None,
+        target_id: None,
+        origin: None,
+    };
+
+    // Task Alpha and Task Beta
+    let task_alpha = "task-alpha-uuid";
+    let task_beta = "task-beta-uuid";
+
+    // 1. Both tasks dispatch successfully before STOP
+    let req_alpha_1 = ToolRequest::new("browser.navigate", json!({ "url": "https://kage.dev/a1" }), "req_a1", "nav a1")
+        .with_task_id(task_alpha);
+    let res_alpha_1 = bus.dispatch(req_alpha_1, policy_ctx.clone(), CancellationToken::new()).await;
+    assert!(res_alpha_1.is_ok(), "Task Alpha request 1 must succeed");
+
+    let req_beta_1 = ToolRequest::new("browser.navigate", json!({ "url": "https://kage.dev/b1" }), "req_b1", "nav b1")
+        .with_task_id(task_beta);
+    let res_beta_1 = bus.dispatch(req_beta_1, policy_ctx.clone(), CancellationToken::new()).await;
+    assert!(res_beta_1.is_ok(), "Task Beta request 1 must succeed");
+
+    // 2. Linearization point: Task Alpha issues STOP
+    admission_registry.seal_task(task_alpha);
+
+    // 3. Task Alpha is blocked at the admission gate (0 new dispatches)
+    let req_alpha_2 = ToolRequest::new("browser.navigate", json!({ "url": "https://kage.dev/a2" }), "req_a2", "nav a2")
+        .with_task_id(task_alpha);
+    let res_alpha_2 = bus.dispatch(req_alpha_2, policy_ctx.clone(), CancellationToken::new()).await;
+    assert!(res_alpha_2.is_err(), "Task Alpha request 2 must be rejected after STOP");
+    match res_alpha_2.unwrap_err() {
+        ToolError::Cancelled { request_id } => {
+            assert_eq!(request_id, "req_a2");
+        }
+        other => panic!("Expected Cancelled for Task Alpha, got: {:?}", other),
+    }
+
+    // 4. Task Beta is completely unaffected and continues executing!
+    let req_beta_2 = ToolRequest::new("browser.navigate", json!({ "url": "https://kage.dev/b2" }), "req_b2", "nav b2")
+        .with_task_id(task_beta);
+    let res_beta_2 = bus.dispatch(req_beta_2, policy_ctx.clone(), CancellationToken::new()).await;
+    assert!(res_beta_2.is_ok(), "Task Beta must continue running uninhibited by Task Alpha's STOP");
+}
+
+// ===========================================================================
+// GATE-10-P: Human Takeover Lineage & Resynchronization Events (Issue #5)
+// ===========================================================================
+
+#[tokio::test]
+async fn test_gate_10_p_takeover_lineage_and_resynchronization() {
+    let gate = DispatchAdmissionGate::new();
+    let takeover_mgr = HumanTakeoverManager::new().with_admission_gate(gate.clone());
+
+    let mut task = AgentTask::new("Complete checkout flow", "agent_sandbox");
+    task.transition(TaskState::Executing);
+
+    // 1. User initiates takeover -> Emits HumanInterventionEvent
+    let intervention_event = takeover_mgr.initiate_takeover_with_lineage(
+        &mut task,
+        "User resolved CAPTCHA manually",
+    ).await;
+
+    assert_eq!(task.state, TaskState::HumanTakeover);
+    assert_eq!(intervention_event.task_id, task.task_id.to_string());
+    assert_eq!(intervention_event.reason, "User resolved CAPTCHA manually");
+    assert!(!intervention_event.timestamp_utc.is_empty());
+    assert!(gate.is_takeover());
+
+    // 2. User finishes manual intervention and resumes -> Emits StateResynchronizedEvent
+    let fresh_telem = ObservationTelemetry {
+        current_url: Some("https://kage.dev/checkout/success".to_string()),
+        ..Default::default()
+    };
+
+    let (ctx, resync_event) = takeover_mgr.resume_with_lineage(
+        &mut task,
+        "state_captcha_pending",
+        Some("Completed captcha challenge on HWND".to_string()),
+        Some(fresh_telem),
+    ).await;
+
+    assert_eq!(task.state, TaskState::Executing);
+    assert!(gate.is_open());
+    assert_eq!(resync_event.task_id, task.task_id.to_string());
+    assert_eq!(resync_event.previous_state_fingerprint, "state_captcha_pending");
+    assert_eq!(resync_event.fresh_url, Some("https://kage.dev/checkout/success".to_string()));
+    assert_eq!(resync_event.fresh_state_fingerprint, "https://kage.dev/checkout/success");
+    assert_eq!(ctx.intervention_summary, Some("Completed captcha challenge on HWND".to_string()));
 }

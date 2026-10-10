@@ -69,6 +69,12 @@ impl ToolRequest {
         self.step_id = step_id.into();
         self
     }
+
+    /// Attach task scope ID to the request.
+    pub fn with_task_id(mut self, task_id: impl Into<String>) -> Self {
+        self.task_id = Some(task_id.into());
+        self
+    }
 }
 
 /// Rich, layered result model from a Tool Bus dispatch.

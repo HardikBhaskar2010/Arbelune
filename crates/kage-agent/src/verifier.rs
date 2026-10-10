@@ -37,7 +37,88 @@ pub enum UrlMatchType {
     Domain,
 }
 
-/// Reference specification for screenshot visual comparison (Correction #1).
+/// Canonical pixel buffer format.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum PixelFormat {
+    Rgba8,
+    Bgra8,
+    Rgb8,
+}
+
+/// Color space for canonical pixel comparison.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ColorSpace {
+    Srgb,
+    LinearRgb,
+}
+
+/// Decoded canonical pixel buffer ensuring deterministic pixel comparison across encoders.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct CanonicalPixelBuffer {
+    /// Width in pixels.
+    pub width: u32,
+    /// Height in pixels.
+    pub height: u32,
+    /// Row stride in bytes (typically width * 4).
+    pub stride: u32,
+    /// Pixel channel format.
+    pub format: PixelFormat,
+    /// Color space.
+    pub color_space: ColorSpace,
+    /// Raw uncompressed decoded pixel bytes.
+    pub pixels: Vec<u8>,
+    /// Cryptographic SHA-256 digest of the source artifact for tamper integrity.
+    pub artifact_digest: String,
+}
+
+impl CanonicalPixelBuffer {
+    pub fn new(
+        width: u32,
+        height: u32,
+        stride: u32,
+        format: PixelFormat,
+        color_space: ColorSpace,
+        pixels: Vec<u8>,
+        artifact_digest: impl Into<String>,
+    ) -> Self {
+        Self {
+            width,
+            height,
+            stride,
+            format,
+            color_space,
+            pixels,
+            artifact_digest: artifact_digest.into(),
+        }
+    }
+
+    pub fn new_rgba8(
+        width: u32,
+        height: u32,
+        pixels: Vec<u8>,
+        artifact_digest: impl Into<String>,
+    ) -> Self {
+        let stride = width * 4;
+        Self {
+            width,
+            height,
+            stride,
+            format: PixelFormat::Rgba8,
+            color_space: ColorSpace::Srgb,
+            pixels,
+            artifact_digest: artifact_digest.into(),
+        }
+    }
+
+    /// Verifies integrity of the decoded pixel buffer against an expected digest.
+    pub fn verify_integrity(&self, expected_digest: &str) -> bool {
+        self.artifact_digest == expected_digest
+    }
+}
+
+/// Reference specification for screenshot visual comparison.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type", content = "payload", rename_all = "snake_case")]
 pub enum ScreenshotReference {
@@ -52,7 +133,9 @@ pub enum ScreenshotReference {
     PixelDiffBaseline {
         /// Optional artifact reference ID resolving to the stored baseline image.
         artifact_id: Option<String>,
-        /// Actual raw baseline image/pixel bytes (PNG, RGBA, or WebP).
+        /// Decoded canonical pixel buffer for true geometric comparison.
+        canonical_baseline: Option<CanonicalPixelBuffer>,
+        /// Actual raw baseline image/pixel bytes (fallback / backwards compatibility).
         baseline_bytes: Option<Vec<u8>>,
         /// Cryptographic SHA-256 digest of the baseline image for tamper verification.
         baseline_sha256: String,
@@ -124,7 +207,27 @@ impl ScreenshotPredicate {
     }
 }
 
-/// Structured network request telemetry captured from Chromium network domain (Correction #7).
+/// Classification authority that designated whether a network request is mutating.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum MutationClassificationSource {
+    /// Explicitly declared by telemetry coordinator or CDP request interceptor.
+    TelemetryCoordinator,
+    /// Explicitly declared by network policy engine.
+    PolicyEngine,
+    /// Declared by tool caller / agent contract.
+    ToolContract,
+    /// Conservative default method classification.
+    DefaultFallback,
+}
+
+impl Default for MutationClassificationSource {
+    fn default() -> Self {
+        Self::DefaultFallback
+    }
+}
+
+/// Structured network request telemetry captured from Chromium network domain.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ObservedNetworkRequest {
     pub request_id: String,
@@ -135,6 +238,7 @@ pub struct ObservedNetworkRequest {
     pub started_at_ms: u64,
     pub completed_at_ms: Option<u64>,
     pub is_mutating: bool,
+    pub classification_source: MutationClassificationSource,
 }
 
 impl ObservedNetworkRequest {
@@ -153,7 +257,40 @@ impl ObservedNetworkRequest {
             started_at_ms: 0,
             completed_at_ms: None,
             is_mutating,
+            classification_source: MutationClassificationSource::DefaultFallback,
         }
+    }
+
+    pub fn with_classification_source(mut self, source: MutationClassificationSource) -> Self {
+        self.classification_source = source;
+        self
+    }
+}
+
+/// Trait governing authoritative classification of network request side-effects.
+pub trait NetworkMutationClassifier: Send + Sync {
+    fn classify(&self, method: &str, url: &str, resource_type: Option<&str>) -> (bool, MutationClassificationSource);
+}
+
+/// Standard network mutation classifier handling standard and non-standard HTTP methods.
+#[derive(Debug, Clone, Default)]
+pub struct StandardNetworkClassifier;
+
+impl StandardNetworkClassifier {
+    pub fn is_mutating(method: &str, url: &str, resource_type: Option<&str>) -> bool {
+        let (mutating, _) = Self.classify(method, url, resource_type);
+        mutating
+    }
+}
+
+impl NetworkMutationClassifier for StandardNetworkClassifier {
+    fn classify(&self, method: &str, _url: &str, _resource_type: Option<&str>) -> (bool, MutationClassificationSource) {
+        let m = method.to_uppercase();
+        let mutating = match m.as_str() {
+            "GET" | "HEAD" | "OPTIONS" | "TRACE" => false,
+            _ => true,
+        };
+        (mutating, MutationClassificationSource::PolicyEngine)
     }
 }
 
@@ -267,6 +404,170 @@ impl VerificationOutcome {
     }
 }
 
+/// Authority and provenance of an expected postcondition effect.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum PredicateAuthority {
+    /// Authoritative contract defined by Capability Registry metadata (highest trust).
+    RegistryContract,
+    /// Explicit constraint derived from user goal or safety policy.
+    UserGoal,
+    /// Proposed by planner model but strictly validated and sealed before execution.
+    ModelProposedValidated,
+}
+
+/// Immutable, validated expected postcondition effect bound prior to tool execution.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ExpectedEffect {
+    /// Semantic description of the intended effect.
+    pub description: String,
+    /// Conforming postcondition predicate.
+    pub predicate: PostconditionPredicate,
+    /// Authority level of this predicate.
+    pub authority: PredicateAuthority,
+    /// Bound tool identifier.
+    pub tool_id: String,
+    /// Bound tool version / contract version.
+    pub tool_version: String,
+    /// Correlated step ID.
+    pub step_id: Option<String>,
+    /// Cryptographic SHA-256 digest of the validated predicate ensuring immutability across dispatch.
+    pub predicate_digest: String,
+}
+
+impl ExpectedEffect {
+    /// Compute the SHA-256 digest of a predicate bound to tool ID and version to guarantee immutability.
+    pub fn compute_digest(tool_id: &str, tool_version: &str, predicate: &PostconditionPredicate) -> String {
+        use sha2::{Digest, Sha256};
+        let mut hasher = Sha256::new();
+        let id_ver = format!("{}@{}", tool_id, tool_version);
+        hasher.update(id_ver.as_bytes());
+        let json_bytes = serde_json::to_vec(predicate).unwrap_or_default();
+        hasher.update(&json_bytes);
+        format!("{:x}", hasher.finalize())
+    }
+
+    /// Verifies that the predicate has not been tampered with or modified since validation.
+    pub fn verify_immutability(&self) -> bool {
+        let expected = Self::compute_digest(&self.tool_id, &self.tool_version, &self.predicate);
+        self.predicate_digest == expected
+    }
+}
+
+/// Validator enforcing predicate conformity, authority rules, and anti-weakening invariants.
+pub struct PredicateValidator;
+
+impl PredicateValidator {
+    /// Validates a proposed predicate against tool metadata and rejects tautologies/weakening.
+    pub fn validate_and_bind(
+        tool_meta: &kage_core::registry::ToolMetadata,
+        description: impl Into<String>,
+        predicate: PostconditionPredicate,
+        authority: PredicateAuthority,
+        step_id: Option<String>,
+    ) -> Result<ExpectedEffect, String> {
+        let desc = description.into();
+
+        // 1. Semantic validity & Anti-weakening check
+        Self::check_semantic_validity(&predicate, tool_meta)?;
+
+        // 2. Validate conformity against tool's verification contract
+        let predicate_kind = match &predicate {
+            PostconditionPredicate::UrlMatch { .. } => "url_match",
+            PostconditionPredicate::DomElement { .. } => "dom_element",
+            PostconditionPredicate::AxNode { .. } => "ax_node",
+            PostconditionPredicate::VisualComparison(_) => "visual_comparison",
+            PostconditionPredicate::NetworkAndConsoleQuiescence(_) => "quiescence",
+            PostconditionPredicate::Contract(_) => "contract",
+            PostconditionPredicate::All(_) => "all",
+            PostconditionPredicate::Any(_) => "any",
+        };
+        tool_meta.validate_predicate_conformity(predicate_kind)?;
+
+        // 3. Compute immutable digest incorporating tool_id and tool_version
+        let digest = ExpectedEffect::compute_digest(&tool_meta.tool_id, &tool_meta.version, &predicate);
+
+        Ok(ExpectedEffect {
+            description: desc,
+            predicate,
+            authority,
+            tool_id: tool_meta.tool_id.clone(),
+            tool_version: tool_meta.version.clone(),
+            step_id,
+            predicate_digest: digest,
+        })
+    }
+
+    fn check_semantic_validity(predicate: &PostconditionPredicate, tool_meta: &kage_core::registry::ToolMetadata) -> Result<(), String> {
+        match predicate {
+            PostconditionPredicate::DomElement { selector, expected_text, expected_attribute, .. } => {
+                let s = selector.trim().to_lowercase();
+                if s == "body" || s == "html" || s == "head" || s == ":root" || s == "*" || s.is_empty() {
+                    return Err(format!(
+                        "Tautological predicate rejected for tool '{}': universal selector '{}' does not verify an action effect",
+                        tool_meta.tool_id, selector
+                    ));
+                }
+
+                // Check semantically useless predicates on mutating tools:
+                // For instance, clicking a button or submitting a form, and then merely asserting that the
+                // trigger button / submit element itself "still exists" without text/attribute change or status transition.
+                if tool_meta.tier == kage_core::policy::PermissionTier::StateMutating
+                    || tool_meta.tier == kage_core::policy::PermissionTier::External
+                    || tool_meta.idempotency == kage_core::registry::IdempotencyClassification::NonIdempotent
+                {
+                    let is_trigger_target = s.contains("submit")
+                        || s.contains("button")
+                        || s.contains("btn")
+                        || s.starts_with("button[")
+                        || s.contains("pay")
+                        || s.contains("checkout");
+                    if is_trigger_target && expected_text.is_none() && expected_attribute.is_none() {
+                        return Err(format!(
+                            "Semantically weak predicate rejected for mutating tool '{}': asserting that trigger element '{}' merely exists without state/attribute change does not establish action completion",
+                            tool_meta.tool_id, selector
+                        ));
+                    }
+                }
+            }
+            PostconditionPredicate::VisualComparison(screenshot_pred) => {
+                if let ScreenshotReference::PixelDiffBaseline { tolerance_percent, .. } = &screenshot_pred.reference {
+                    if *tolerance_percent >= 1.0 {
+                        return Err(format!(
+                            "Vacuous visual tolerance >= 100% rejected for tool '{}'",
+                            tool_meta.tool_id
+                        ));
+                    }
+                }
+            }
+            PostconditionPredicate::All(children) => {
+                if children.is_empty() {
+                    return Err(format!(
+                        "Empty compound predicate All([]) rejected for tool '{}'",
+                        tool_meta.tool_id
+                    ));
+                }
+                for child in children {
+                    Self::check_semantic_validity(child, tool_meta)?;
+                }
+            }
+            PostconditionPredicate::Any(children) => {
+                if children.is_empty() {
+                    return Err(format!(
+                        "Empty compound predicate Any([]) rejected for tool '{}'",
+                        tool_meta.tool_id
+                    ));
+                }
+                for child in children {
+                    Self::check_semantic_validity(child, tool_meta)?;
+                }
+            }
+            _ => {}
+        }
+        Ok(())
+    }
+}
+
 /// Observed DOM element state extracted from real browser telemetry.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ObservedElement {
@@ -291,6 +592,7 @@ pub struct ObservationTelemetry {
     pub dom_elements: Vec<ObservedElement>,
     pub ax_nodes: Vec<ObservedAxNode>,
     pub screenshot_hash: Option<String>,
+    pub canonical_screenshot: Option<CanonicalPixelBuffer>,
     pub screenshot_bytes: Option<Vec<u8>>,
     pub screenshot_width: Option<u32>,
     pub screenshot_height: Option<u32>,
@@ -310,6 +612,27 @@ pub struct DeterministicVerifier;
 impl DeterministicVerifier {
     pub fn new() -> Self {
         Self
+    }
+
+    /// Evaluates an authoritative, immutable [`ExpectedEffect`] against execution telemetry.
+    pub fn verify_expected_effect(
+        &self,
+        expected_effect: &ExpectedEffect,
+        tool_response: &ToolResponse,
+        baseline: Option<&BaselineObservation>,
+        telemetry: &ObservationTelemetry,
+    ) -> VerificationOutcome {
+        if !expected_effect.verify_immutability() {
+            return VerificationOutcome::Fail {
+                reason: "Predicate tampering detected: predicate digest does not match sealed hash".to_string(),
+                observed: json!({
+                    "expected_digest": expected_effect.predicate_digest,
+                    "actual_digest": ExpectedEffect::compute_digest(&expected_effect.tool_id, &expected_effect.tool_version, &expected_effect.predicate),
+                }),
+            };
+        }
+
+        self.verify(&expected_effect.predicate, tool_response, baseline, telemetry)
     }
 
     /// Deterministically evaluate a [`PostconditionPredicate`] against tool response,
@@ -589,6 +912,7 @@ impl DeterministicVerifier {
                             }
                             ScreenshotReference::PixelDiffBaseline {
                                 artifact_id,
+                                canonical_baseline,
                                 baseline_bytes,
                                 baseline_sha256,
                                 width: _,
@@ -611,7 +935,93 @@ impl DeterministicVerifier {
                                     };
                                 }
 
-                                // 2. Direct pixel comparison when baseline_bytes and telemetry screenshot_bytes are both present
+                                // 2. Canonical decoded pixel buffer comparison (Issue #2: canonical representation)
+                                if let Some(ref base_buf) = canonical_baseline {
+                                    // Verify artifact digest integrity first
+                                    if !base_buf.verify_integrity(baseline_sha256) {
+                                        return VerificationOutcome::Fail {
+                                            reason: format!(
+                                                "Canonical baseline pixel buffer digest mismatch: buffer digest '{}' does not match baseline_sha256 '{}'",
+                                                base_buf.artifact_digest, baseline_sha256
+                                            ),
+                                            observed: json!({
+                                                "buffer_digest": base_buf.artifact_digest,
+                                                "expected_digest": baseline_sha256,
+                                            }),
+                                        };
+                                    }
+
+                                    if let Some(ref cur_buf) = telemetry.canonical_screenshot {
+                                        if base_buf.format != cur_buf.format || base_buf.color_space != cur_buf.color_space {
+                                            return VerificationOutcome::Fail {
+                                                reason: format!(
+                                                    "Canonical pixel format or color space mismatch: baseline ({:?}, {:?}) vs observed ({:?}, {:?})",
+                                                    base_buf.format, base_buf.color_space, cur_buf.format, cur_buf.color_space
+                                                ),
+                                                observed: json!({
+                                                    "baseline_format": format!("{:?}", base_buf.format),
+                                                    "baseline_color_space": format!("{:?}", base_buf.color_space),
+                                                    "observed_format": format!("{:?}", cur_buf.format),
+                                                    "observed_color_space": format!("{:?}", cur_buf.color_space),
+                                                }),
+                                            };
+                                        }
+
+                                        let min_len = base_buf.pixels.len().min(cur_buf.pixels.len());
+                                        let max_len = base_buf.pixels.len().max(cur_buf.pixels.len());
+                                        let mut diff_bytes = 0usize;
+                                        for i in 0..min_len {
+                                            if base_buf.pixels[i] != cur_buf.pixels[i] {
+                                                diff_bytes += 1;
+                                            }
+                                        }
+                                        diff_bytes += max_len - min_len;
+                                        let drift = if max_len == 0 { 0.0 } else { diff_bytes as f32 / max_len as f32 };
+
+                                        if drift <= *tolerance_percent {
+                                            return VerificationOutcome::Pass {
+                                                evidence: VerificationEvidence {
+                                                    predicate_type: "VisualComparison:PixelDiffBaseline:Canonical".to_string(),
+                                                    observed_value: json!({
+                                                        "hash": observed_hash,
+                                                        "drift_percent": drift,
+                                                        "tolerance": tolerance_percent,
+                                                        "diff_bytes": diff_bytes,
+                                                        "total_bytes": max_len,
+                                                        "width": cur_buf.width,
+                                                        "height": cur_buf.height,
+                                                        "stride": cur_buf.stride,
+                                                        "format": format!("{:?}", cur_buf.format),
+                                                    }),
+                                                    matched_criteria: format!(
+                                                        "Canonical pixel drift {:.2}% within tolerance {:.2}%",
+                                                        drift * 100.0,
+                                                        tolerance_percent * 100.0
+                                                    ),
+                                                    timestamp_utc: timestamp,
+                                                    latency_ms: duration_ms,
+                                                },
+                                                duration_ms,
+                                            };
+                                        } else {
+                                            return VerificationOutcome::Fail {
+                                                reason: format!(
+                                                    "Canonical pixel difference {:.2}% exceeds tolerance {:.2}%",
+                                                    drift * 100.0,
+                                                    tolerance_percent * 100.0
+                                                ),
+                                                observed: json!({
+                                                    "observed_hash": observed_hash,
+                                                    "expected_hash": baseline_sha256,
+                                                    "drift_percent": drift,
+                                                    "tolerance": tolerance_percent,
+                                                }),
+                                            };
+                                        }
+                                    }
+                                }
+
+                                // 3. Direct pixel comparison when baseline_bytes and telemetry screenshot_bytes are both present
                                 if let (Some(ref base_raw), Some(ref cur_raw)) = (baseline_bytes, &telemetry.screenshot_bytes) {
                                     let base_slice = base_raw.as_slice();
                                     let cur_slice = cur_raw.as_slice();
@@ -664,7 +1074,7 @@ impl DeterministicVerifier {
                                     }
                                 }
 
-                                // 3. Precomputed visual drift metric from telemetry
+                                // 4. Precomputed visual drift metric from telemetry
                                 if let Some(drift) = telemetry.screenshot_drift_percent {
                                     if drift <= *tolerance_percent {
                                         VerificationOutcome::Pass {
@@ -704,7 +1114,7 @@ impl DeterministicVerifier {
                                     // PixelDiffBaseline CANNOT evaluate drift from hash alone.
                                     // Telemetry missing raw bytes and precomputed drift must yield Unknown!
                                     VerificationOutcome::Unknown {
-                                        uncertainty_cause: "PixelDiffBaseline requires actual image bytes or drift telemetry; cannot compute pixel difference from hash alone".to_string(),
+                                        uncertainty_cause: "PixelDiffBaseline requires decoded canonical pixel buffer, image bytes, or drift telemetry; cannot compute pixel difference from hash alone".to_string(),
                                         partial_observation: json!({
                                             "observed_hash": observed_hash,
                                             "baseline_sha256": baseline_sha256,

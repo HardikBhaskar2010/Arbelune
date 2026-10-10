@@ -58,6 +58,7 @@ impl Drop for DispatchPermit {
 /// Atomic admission gate governing entry into the ToolBus dispatch boundary.
 #[derive(Debug, Clone)]
 pub struct DispatchAdmissionGate {
+    task_id: Option<String>,
     state: Arc<RwLock<AdmissionState>>,
     in_flight: Arc<AtomicUsize>,
 }
@@ -69,12 +70,32 @@ impl Default for DispatchAdmissionGate {
 }
 
 impl DispatchAdmissionGate {
-    /// Create a new, open admission gate.
+    /// Create a new, open admission gate without specific task scope.
     pub fn new() -> Self {
         Self {
+            task_id: None,
             state: Arc::new(RwLock::new(AdmissionState::Open)),
             in_flight: Arc::new(AtomicUsize::new(0)),
         }
+    }
+
+    /// Create an admission gate explicitly scoped to a discrete agent task ID.
+    ///
+    /// # Task-Scoped STOP Isolation
+    /// When STOP is triggered on a task-scoped gate, only that specific task's
+    /// admission is sealed. Independent concurrent agent tasks retain their own
+    /// active, open gates.
+    pub fn for_task(task_id: impl Into<String>) -> Self {
+        Self {
+            task_id: Some(task_id.into()),
+            state: Arc::new(RwLock::new(AdmissionState::Open)),
+            in_flight: Arc::new(AtomicUsize::new(0)),
+        }
+    }
+
+    /// Optional task scope ID associated with this gate.
+    pub fn task_id(&self) -> Option<&str> {
+        self.task_id.as_deref()
     }
 
     /// Atomically check state and acquire an in-flight dispatch permit.
@@ -137,5 +158,72 @@ impl DispatchAdmissionGate {
     /// Count of currently active in-flight tool dispatches.
     pub fn in_flight_count(&self) -> usize {
         self.in_flight.load(Ordering::SeqCst)
+    }
+}
+
+/// Registry managing task-scoped admission gates to guarantee cross-session isolation.
+///
+/// Ensures Agent Task A calling STOP cancels only Task A's admission gate without
+/// affecting Agent Task B or global developer interactive sessions.
+#[derive(Debug, Clone, Default)]
+pub struct AdmissionGateRegistry {
+    gates: Arc<RwLock<std::collections::HashMap<String, DispatchAdmissionGate>>>,
+    global_gate: DispatchAdmissionGate,
+}
+
+impl AdmissionGateRegistry {
+    /// Create a new admission gate registry.
+    pub fn new() -> Self {
+        Self {
+            gates: Arc::new(RwLock::new(std::collections::HashMap::new())),
+            global_gate: DispatchAdmissionGate::new(),
+        }
+    }
+
+    /// Access the global / unscoped admission gate.
+    pub fn global_gate(&self) -> &DispatchAdmissionGate {
+        &self.global_gate
+    }
+
+    /// Get or create an admission gate scoped to a specific task.
+    pub fn get_or_create(&self, task_id: &str) -> DispatchAdmissionGate {
+        let mut guard = self.gates.write().unwrap();
+        guard
+            .entry(task_id.to_string())
+            .or_insert_with(|| DispatchAdmissionGate::for_task(task_id))
+            .clone()
+    }
+
+    /// Retrieve an appropriate admission gate given an optional task scope.
+    pub fn get_gate(&self, task_id: Option<&str>) -> DispatchAdmissionGate {
+        match task_id {
+            Some(tid) => self.get_or_create(tid),
+            None => self.global_gate.clone(),
+        }
+    }
+
+    /// Explicitly bind a task-scoped admission gate.
+    pub fn set_task_gate(&self, task_id: &str, gate: DispatchAdmissionGate) {
+        let mut guard = self.gates.write().unwrap();
+        guard.insert(task_id.to_string(), gate);
+    }
+
+    /// Set the global / fallback admission gate.
+    pub fn set_global_gate(&mut self, gate: DispatchAdmissionGate) {
+        self.global_gate = gate;
+    }
+
+    /// Seal admission for a specific task. Zero impact on other tasks.
+    pub fn seal_task(&self, task_id: &str) {
+        let guard = self.gates.read().unwrap();
+        if let Some(gate) = guard.get(task_id) {
+            gate.seal_cancelled();
+        }
+    }
+
+    /// Remove a terminated task's gate.
+    pub fn remove_task(&self, task_id: &str) -> Option<DispatchAdmissionGate> {
+        let mut guard = self.gates.write().unwrap();
+        guard.remove(task_id)
     }
 }

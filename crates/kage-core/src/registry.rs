@@ -84,6 +84,23 @@ pub enum DeclarativeContract {
     Custom(String),
 }
 
+/// Declarative verification requirements governing what postcondition predicates
+/// may be bound to this tool (Authority & Anti-Weakening Guard).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ToolVerificationContract {
+    /// Read-only / Query tool: Postcondition must verify non-empty observation.
+    ObservationRequired,
+    /// Navigation tool: Requires URL transition / committed load / domain match.
+    NavigationTransition { allowed_predicates: Vec<String> },
+    /// Mutating page interaction: Requires DOM/AX state change or specific element mutation.
+    StateMutationRequired { allowed_predicates: Vec<String> },
+    /// Tab management: Requires tab lifecycle state mutation (created / closed / switched).
+    TabStateTransition,
+    /// Custom contract defined by capability registration.
+    Custom(String),
+}
+
 /// Functional category for grouping and discovery.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -109,6 +126,8 @@ pub struct ToolMetadata {
     pub retry_policy: RetryPolicy,
     pub timeout_ms: u64,
     pub declarative_contracts: Vec<DeclarativeContract>,
+    /// Declarative verification requirements governing allowable postcondition predicates.
+    pub verification_contract: Option<ToolVerificationContract>,
     /// When true, this tool is strictly restricted to interactive developer REPL/DevTools
     /// and cannot be queried or executed by autonomous agent planners without Tier 3 escalation.
     pub is_developer_only: bool,
@@ -132,6 +151,7 @@ impl ToolMetadata {
             retry_policy: RetryPolicy::Never,
             timeout_ms: 10_000,
             declarative_contracts: Vec::new(),
+            verification_contract: None,
             is_developer_only: false,
         }
     }
@@ -166,10 +186,58 @@ impl ToolMetadata {
         self
     }
 
+    pub fn with_verification_contract(mut self, contract: ToolVerificationContract) -> Self {
+        self.verification_contract = Some(contract);
+        self
+    }
+
     pub fn developer_only(mut self) -> Self {
         self.is_developer_only = true;
         self.category = ToolCategory::Developer;
         self
+    }
+
+    /// Validates whether a proposed postcondition predicate conforms to this tool's
+    /// authoritative verification contract. Prevents model hallucinations or tautologies.
+    pub fn validate_predicate_conformity(&self, predicate_kind: &str) -> Result<(), String> {
+        if let Some(ref contract) = self.verification_contract {
+            match contract {
+                ToolVerificationContract::ObservationRequired => {
+                    if predicate_kind == "url_match" && self.category != ToolCategory::Browser {
+                        return Err(format!(
+                            "Tool '{}' is observation-scoped; cannot bind URL transition predicate",
+                            self.tool_id
+                        ));
+                    }
+                }
+                ToolVerificationContract::NavigationTransition { allowed_predicates } => {
+                    if !allowed_predicates.iter().any(|p| p == predicate_kind) {
+                        return Err(format!(
+                            "Predicate '{}' not permitted for navigation tool '{}'. Allowed: {:?}",
+                            predicate_kind, self.tool_id, allowed_predicates
+                        ));
+                    }
+                }
+                ToolVerificationContract::StateMutationRequired { allowed_predicates } => {
+                    if !allowed_predicates.iter().any(|p| p == predicate_kind) {
+                        return Err(format!(
+                            "Predicate '{}' not permitted for mutating tool '{}'. Allowed: {:?}",
+                            predicate_kind, self.tool_id, allowed_predicates
+                        ));
+                    }
+                }
+                ToolVerificationContract::TabStateTransition => {
+                    if predicate_kind != "contract" && predicate_kind != "dom_element" {
+                        return Err(format!(
+                            "Tool '{}' requires tab lifecycle transition contract (predicate '{}' disallowed by tool's verification contract)",
+                            self.tool_id, predicate_kind
+                        ));
+                    }
+                }
+                ToolVerificationContract::Custom(_) => {}
+            }
+        }
+        Ok(())
     }
 
     /// Validate input arguments against this tool's declarative JSON schema.

@@ -155,6 +155,7 @@ async fn setup_test_runtime() -> (Arc<ToolBus>, Arc<AuditDb>, CapabilityRegistry
             timeout_ms: 5000,
             declarative_contracts: vec![],
             is_developer_only: false,
+            verification_contract: None,
         })
         .await;
 
@@ -171,6 +172,7 @@ async fn setup_test_runtime() -> (Arc<ToolBus>, Arc<AuditDb>, CapabilityRegistry
             timeout_ms: 10000,
             declarative_contracts: vec![DeclarativeContract::NavigationCommitted],
             is_developer_only: false,
+            verification_contract: None,
         })
         .await;
 
@@ -188,6 +190,7 @@ async fn setup_test_runtime() -> (Arc<ToolBus>, Arc<AuditDb>, CapabilityRegistry
             timeout_ms: 5000,
             declarative_contracts: vec![],
             is_developer_only: true, // Developer REPL only!
+            verification_contract: None,
         })
         .await;
 

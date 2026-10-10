@@ -313,6 +313,9 @@ pub fn run() {
             ipc::query_permission,
             ipc::set_permission,
             ipc::escalate_session,
+            ipc::task_stop,
+            ipc::task_takeover,
+            ipc::task_resume,
         ])
         .run(tauri::generate_context!())
         .expect("KAGE Tauri application failed to start");

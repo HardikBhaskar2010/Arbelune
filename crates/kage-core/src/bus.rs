@@ -29,7 +29,7 @@ use std::time::Instant;
 use tokio::sync::RwLock;
 use tokio_util::sync::CancellationToken;
 
-use crate::admission::{DispatchAdmissionGate, DispatchDenial};
+use crate::admission::{AdmissionGateRegistry, DispatchAdmissionGate, DispatchDenial};
 use crate::audit::{digest_json, ActorType, AuditSink, AuditStatus, CanonicalAuditRecord};
 use crate::lineage::ExecutionStatus;
 use crate::policy::{AuditFailurePolicy, PolicyContext, PolicyDecision, PolicyEngine};
@@ -49,7 +49,7 @@ pub struct ToolBus {
     sanitizer: SecretSanitizer,
     audit_sink: Option<Arc<dyn AuditSink>>,
     host_instance_id: String,
-    admission_gate: DispatchAdmissionGate,
+    admission_registry: AdmissionGateRegistry,
 }
 
 impl ToolBus {
@@ -62,7 +62,7 @@ impl ToolBus {
             sanitizer: SecretSanitizer::new(),
             audit_sink: None,
             host_instance_id: format!("inst_{}", uuid::Uuid::new_v4().simple()),
-            admission_gate: DispatchAdmissionGate::new(),
+            admission_registry: AdmissionGateRegistry::new(),
         }
     }
 
@@ -79,13 +79,29 @@ impl ToolBus {
 
     /// Set an explicit admission gate (e.g. shared with AgentCancellation / HumanTakeover).
     pub fn with_admission_gate(mut self, gate: DispatchAdmissionGate) -> Self {
-        self.admission_gate = gate;
+        let task_id = gate.task_id().map(|s| s.to_string());
+        if let Some(tid) = task_id {
+            self.admission_registry.set_task_gate(&tid, gate);
+        } else {
+            self.admission_registry.set_global_gate(gate);
+        }
         self
     }
 
-    /// Access the underlying atomic admission gate.
+    /// Set an explicit admission registry for multi-task isolation.
+    pub fn with_admission_registry(mut self, registry: AdmissionGateRegistry) -> Self {
+        self.admission_registry = registry;
+        self
+    }
+
+    /// Access the underlying default/global atomic admission gate.
     pub fn admission_gate(&self) -> &DispatchAdmissionGate {
-        &self.admission_gate
+        self.admission_registry.global_gate()
+    }
+
+    /// Access the task-scoped admission gate registry.
+    pub fn admission_registry(&self) -> &AdmissionGateRegistry {
+        &self.admission_registry
     }
 
     /// Set an [`AuditSink`] on builder pattern.
@@ -139,8 +155,9 @@ impl ToolBus {
         let task_id = request.task_id.clone();
         let step_id = request.step_id.clone();
 
-        // 0. Atomic Admission Gate check (INV-09 & Human Takeover state barrier)
-        let _dispatch_permit = match self.admission_gate.acquire_permit() {
+        // 0. Atomic Admission Gate check (INV-09 & Human Takeover state barrier, Task-Scoped)
+        let gate = self.admission_registry.get_gate(task_id.as_deref());
+        let _dispatch_permit = match gate.acquire_permit() {
             Ok(permit) => permit,
             Err(DispatchDenial::Cancelled) => {
                 return Err(ToolError::Cancelled {

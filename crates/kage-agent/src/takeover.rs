@@ -106,9 +106,69 @@ impl HumanTakeoverManager {
         ctx
     }
 
+    /// User signals takeover and generates a lineage event for audit tracking.
+    pub async fn initiate_takeover_with_lineage(
+        &self,
+        task: &mut AgentTask,
+        reason: impl Into<String>,
+    ) -> HumanInterventionEvent {
+        let r = reason.into();
+        self.initiate_takeover(task).await;
+        HumanInterventionEvent {
+            task_id: task.task_id.to_string(),
+            timestamp_utc: chrono::Utc::now().to_rfc3339(),
+            reason: r,
+        }
+    }
+
+    /// User resumes autonomous execution and records state resynchronization in the lineage chain.
+    pub async fn resume_with_lineage(
+        &self,
+        task: &mut AgentTask,
+        previous_state_fingerprint: impl Into<String>,
+        summary: Option<String>,
+        fresh_telemetry: Option<ObservationTelemetry>,
+    ) -> (TakeoverResumeContext, StateResynchronizedEvent) {
+        let fresh_url = fresh_telemetry.as_ref().and_then(|t| t.current_url.clone());
+        let fresh_fingerprint = fresh_url
+            .as_deref()
+            .unwrap_or("url:unknown")
+            .to_string();
+
+        let ctx = self.resume_autonomous(task, summary, fresh_telemetry).await;
+        let event = StateResynchronizedEvent {
+            task_id: task.task_id.to_string(),
+            tab_id: task.starting_tab_id.clone(),
+            previous_state_fingerprint: previous_state_fingerprint.into(),
+            fresh_state_fingerprint: fresh_fingerprint,
+            fresh_url,
+            timestamp_utc: ctx.timestamp_utc.clone(),
+        };
+        (ctx, event)
+    }
+
     /// Consume any pending takeover resume context to inject into the model prompt.
     pub async fn take_resume_context(&self) -> Option<TakeoverResumeContext> {
         let mut stored = self.resume_context.write().await;
         stored.take()
     }
+}
+
+/// Lineage event emitted when human intervention occurs, recording user takeover reason.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct HumanInterventionEvent {
+    pub task_id: String,
+    pub timestamp_utc: String,
+    pub reason: String,
+}
+
+/// Lineage event emitted upon human takeover resumption, invalidating stale state assumptions.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct StateResynchronizedEvent {
+    pub task_id: String,
+    pub tab_id: Option<String>,
+    pub previous_state_fingerprint: String,
+    pub fresh_state_fingerprint: String,
+    pub fresh_url: Option<String>,
+    pub timestamp_utc: String,
 }

@@ -33,6 +33,29 @@ impl AgentCancellation {
         }
     }
 
+    /// Create an agent cancellation manager explicitly scoped to a discrete agent task.
+    ///
+    /// Sealing this cancellation manager will only close admission for this specific task,
+    /// guaranteeing cross-task isolation.
+    pub fn for_task(task_id: impl Into<String>) -> Self {
+        Self {
+            root: CancellationToken::new(),
+            admission_gate: DispatchAdmissionGate::for_task(task_id),
+        }
+    }
+
+    /// Bind to a shared `AdmissionGateRegistry` for a specific task.
+    pub fn for_task_with_registry(
+        task_id: &str,
+        registry: &kage_core::admission::AdmissionGateRegistry,
+    ) -> Self {
+        let gate = registry.get_or_create(task_id);
+        Self {
+            root: CancellationToken::new(),
+            admission_gate: gate,
+        }
+    }
+
     /// Bind an explicit shared admission gate.
     pub fn with_admission_gate(mut self, gate: DispatchAdmissionGate) -> Self {
         self.admission_gate = gate;
