@@ -383,3 +383,59 @@ export const KageIconCodeFocus: React.FC<KageIconProps> = ({
     <circle cx="12" cy="12" r="2.5" fill={color} fillOpacity="0.25" />
   </svg>
 );
+
+// ─── Arbelune Icon System Aliases & Mark ─────────────────────────────────────
+export type ArbeluneIconProps = KageIconProps;
+export const ArbeluneIconHome = KageIconHome;
+export const ArbeluneIconAI = KageIconAI;
+export const ArbeluneIconInspect = KageIconInspect;
+export const ArbeluneIconDOM = KageIconDOM;
+export const ArbeluneIconNetwork = KageIconNetwork;
+export const ArbeluneIconPerformance = KageIconPerformance;
+export const ArbeluneIconConsole = KageIconConsole;
+export const ArbeluneIconStorage = KageIconStorage;
+export const ArbeluneIconSecurity = KageIconSecurity;
+export const ArbeluneIconExtensions = KageIconExtensions;
+export const ArbeluneIconSettings = KageIconSettings;
+export const ArbeluneIconScanner = KageIconScanner;
+export const ArbeluneIconCodeFocus = KageIconCodeFocus;
+
+/**
+ * Geometric Arbelune 'A' Chevron Icon Mark
+ */
+export const ArbeluneIconMark: React.FC<ArbeluneIconProps> = ({
+  size = 20,
+  className,
+  ...props
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 100 100"
+    fill="none"
+    className={className}
+    {...props}
+  >
+    <path
+      d="M20 82 L50 20 L80 82"
+      stroke="url(#arbelune_grad)"
+      strokeWidth="12"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M32 60 L68 60"
+      stroke="#FFA5AB"
+      strokeWidth="10"
+      strokeLinecap="round"
+    />
+    <circle cx="50" cy="42" r="5" fill="#FF2D55" />
+    <defs>
+      <linearGradient id="arbelune_grad" x1="20" y1="82" x2="80" y2="20" gradientUnits="userSpaceOnUse">
+        <stop stopColor="#F9DBBD" />
+        <stop offset="0.5" stopColor="#FFA5AB" />
+        <stop offset="1" stopColor="#FF2D55" />
+      </linearGradient>
+    </defs>
+  </svg>
+);

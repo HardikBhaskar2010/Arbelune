@@ -54,8 +54,8 @@ export const IconSidebar: React.FC<IconSidebarProps> = ({
         <div className="icon-sidebar__bottom">
           {bottomItems.map(renderItem)}
           <div className="icon-sidebar__brand">
-            <img src="/kage-logo.png" alt="KAGE" className="icon-sidebar__brand-logo" />
-            <span className="icon-sidebar__brand-version">v0.1.0</span>
+            <img src="/arbelune-icon.png" alt="Arbelune" className="icon-sidebar__brand-logo" />
+            <span className="icon-sidebar__brand-version">v0.4.1</span>
           </div>
         </div>
       )}

@@ -173,7 +173,7 @@ export const MicroInspectOverlay: React.FC = () => {
           <div className="mic-actions">
             <button className="mic-btn mic-btn--ai" onClick={handleSendToAi}>
               <Sparkles size={13} strokeWidth={2} />
-              Send to Kage AI
+              Send to Arbelune AI
             </button>
             <button className="mic-btn mic-btn--copy" onClick={handleCopySelector}>
               {copied ? <Check size={13} strokeWidth={2} /> : <Copy size={13} strokeWidth={2} />}

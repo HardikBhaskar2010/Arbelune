@@ -131,8 +131,8 @@ export const Omnibox: React.FC<OmniboxProps> = ({
         <button
           className="omnibox__ai-btn"
           onClick={onToggleAi}
-          aria-label="Ask Kage AI"
-          title="Ask Kage AI"
+          aria-label="Ask Arbelune AI"
+          title="Ask Arbelune AI"
           type="button"
         >
           <Sparkles size={14} strokeWidth={2} className="omnibox__sparkle-icon" />
@@ -168,8 +168,8 @@ export const Omnibox: React.FC<OmniboxProps> = ({
         >
           <Blocks size={16} strokeWidth={2} />
         </button>
-        <div className="omnibox__profile-wrap" title="Kage Profile">
-          <img src="/avatar.png" alt="Profile" className="omnibox__profile-avatar" />
+        <div className="omnibox__profile-wrap" title="Arbelune Profile">
+          <img src="/arbelune-avatar.png" alt="Profile" className="omnibox__profile-avatar" />
           <span className="omnibox__profile-dot" />
         </div>
       </div>

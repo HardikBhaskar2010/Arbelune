@@ -1,5 +1,5 @@
 /**
- * KAGE Global Styles — Liquid Glass Browser Chrome
+ * Arbelune Global Styles — Liquid Glass Browser Chrome
  * Imports: design tokens, Google Fonts
  */
 
@@ -111,6 +111,7 @@ body,
 }
 
 /* ─── Gradient background for the app ──────────────────────────────────── */
+.arbelune-bg,
 .kage-bg {
   background:
     radial-gradient(ellipse 80% 60% at 20% 10%, rgba(69, 9, 32, 0.4) 0%, transparent 70%),

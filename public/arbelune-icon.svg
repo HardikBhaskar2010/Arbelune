@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="arbeluneChevron" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FF106E" />
+      <stop offset="30%" stop-color="#FF2F88" />
+      <stop offset="65%" stop-color="#FF80B2" />
+      <stop offset="90%" stop-color="#FFE4EF" />
+      <stop offset="100%" stop-color="#FFFFFF" />
+    </linearGradient>
+    <linearGradient id="arbeluneDot" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FF2F88" />
+      <stop offset="100%" stop-color="#FFA8CE" />
+    </linearGradient>
+    <filter id="neonGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+  <!-- Geometric Chevron A Mark -->
+  <path d="M 256,76 L 436,424 L 358,424 L 256,220 L 154,424 L 76,424 Z" fill="url(#arbeluneChevron)" />
+  <!-- Central Floating Dot -->
+  <circle cx="256" cy="336" r="33" fill="url(#arbeluneDot)" />
+</svg>

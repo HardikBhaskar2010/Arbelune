@@ -1,15 +1,23 @@
 /**
- * KAGE Design Tokens — Liquid Glass System (v2 — pixel-faithful to mockups)
- * Specification: docs/09-ui/Design_System.md + public/Design System.png
+ * Arbelune Design Tokens — Liquid Glass System
+ * Positioning: A governed browser runtime for AI agents
  */
 
 :root {
-  /* ─── KAGE Canonical Design Tokens (Chunk 7 Visual Reference) ───────── */
-  --kage-peach:         #F9DBBD;
-  --kage-pink:          #FFA5AB;
-  --kage-rose:          #DA627D;
-  --kage-magenta:       #A53860;
-  --kage-wine:          #450920;
+  /* ─── Arbelune Canonical Design Tokens ────────────────────────────────── */
+  --arbelune-peach:     #F9DBBD;
+  --arbelune-pink:      #FFA5AB;
+  --arbelune-rose:      #DA627D;
+  --arbelune-magenta:   #A53860;
+  --arbelune-wine:      #450920;
+  --arbelune-neon:      #FF2D55;
+
+  /* Backward-compatible aliases */
+  --kage-peach:         var(--arbelune-peach);
+  --kage-pink:          var(--arbelune-pink);
+  --kage-rose:          var(--arbelune-rose);
+  --kage-magenta:       var(--arbelune-magenta);
+  --kage-wine:          var(--arbelune-wine);
 
   --glass-blur:         blur(20px);
   --glass-border:       rgba(249, 219, 189, 0.15);
@@ -18,11 +26,11 @@
   --sidebar-width:      54px;
 
   /* ─── Color Aliases ─────────────────────────────────────────────────── */
-  --color-peach:        var(--kage-peach);
-  --color-pink:         var(--kage-pink);
-  --color-rose:         var(--kage-rose);
-  --color-magenta:      var(--kage-magenta);
-  --color-wine:         var(--kage-wine);
+  --color-peach:        var(--arbelune-peach);
+  --color-pink:         var(--arbelune-pink);
+  --color-rose:         var(--arbelune-rose);
+  --color-magenta:      var(--arbelune-magenta);
+  --color-wine:         var(--arbelune-wine);
 
   --color-surface-1:    #2B0E16;  /* Darkest surface */
   --color-surface-2:    #3A1421;  /* Mid surface */
