@@ -2,16 +2,15 @@ import React from "react";
 import "./BrowserWebview.css";
 import { useBrowser } from "../../context/BrowserContext";
 import { isTauriEnvironment } from "../../adapters/BrowserAdapter";
-import { ExternalLink, ShieldCheck, RefreshCw, Layers, Cpu, ShieldAlert } from "lucide-react";
+import { Layers, Cpu } from "lucide-react";
 
 interface BrowserWebviewProps {
   url: string;
 }
 
 export const BrowserWebview: React.FC<BrowserWebviewProps> = ({ url }) => {
-  const { activeTab, refresh } = useBrowser();
+  const { activeTab } = useBrowser();
   const isTauri = isTauriEnvironment();
-  const isSecure = url.startsWith("https://") || url.startsWith("arbelune://") || url.startsWith("kage://");
 
   return (
     <div className="browser-webview" role="region" aria-label="Web page viewport">
@@ -22,44 +21,6 @@ export const BrowserWebview: React.FC<BrowserWebviewProps> = ({ url }) => {
 
       {/* ── Viewport Stage ──────────────────────────────────────── */}
       <div className="webview-stage">
-        {/* Viewport Top Chrome Header */}
-        <div className="webview-site-header">
-          <div className="webview-site-brand">
-            <span className={`webview-site-pill ${isSecure ? "webview-site-pill--secure" : "webview-site-pill--insecure"}`}>
-              {isSecure ? <ShieldCheck size={13} strokeWidth={2} /> : <ShieldAlert size={13} strokeWidth={2} />}
-              {isSecure ? "Verified TLS 1.3" : "Not Secure"}
-            </span>
-            <span className="webview-site-host" title={url}>{url || "about:blank"}</span>
-            {activeTab?.profile_id && (
-              <span className="webview-profile-chip" title="Active Storage Profile">
-                {activeTab.profile_id}
-              </span>
-            )}
-          </div>
-          <div className="webview-site-actions">
-            <button
-              className="webview-site-btn"
-              onClick={refresh}
-              title="Reload active tab"
-              aria-label="Reload active tab"
-            >
-              <RefreshCw size={12} strokeWidth={2} />
-            </button>
-            {url && (
-              <a
-                href={url}
-                target="_blank"
-                rel="noreferrer"
-                className="webview-site-btn"
-                title="Open in system browser"
-                aria-label="Open in system browser"
-              >
-                <ExternalLink size={12} strokeWidth={2} />
-              </a>
-            )}
-          </div>
-        </div>
-
         {/* Viewport Surface Body */}
         {isTauri ? (
           /* Native Windowed CEF Child Surface: Transparent aperture ensuring 60-120 FPS GPU compositing (INV-01, CEF-06B) */

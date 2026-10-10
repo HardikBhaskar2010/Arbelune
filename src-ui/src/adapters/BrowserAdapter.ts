@@ -42,6 +42,8 @@ export interface BrowserAdapter {
   refresh(tabId: string): Promise<void>;
   /** Synchronize viewport container bounds to the native CEF window surface */
   syncViewportBounds(bounds: ViewportBounds): Promise<void>;
+  /** Inject a custom theme script into the page */
+  injectPageTheme?(tabId?: string, themeName?: string): Promise<boolean>;
 }
 
 /** Check if executing inside Tauri desktop runtime */

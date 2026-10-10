@@ -323,6 +323,7 @@ pub fn run() {
             ipc::go_back,
             ipc::go_forward,
             ipc::reload_tab,
+            ipc::inject_page_theme,
             ipc::list_tabs,
             ipc::get_active_tab,
             ipc::inspect_at_location,

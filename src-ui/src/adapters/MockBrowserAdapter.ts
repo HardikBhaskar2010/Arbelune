@@ -79,6 +79,10 @@ export class MockBrowserAdapter implements BrowserAdapter {
     // No-op in browser mock mode
   }
 
+  async injectPageTheme(_tabId?: string, _themeName = "google"): Promise<boolean> {
+    return true;
+  }
+
   private formatTitle(url: string): string {
     try {
       const parsed = new URL(url.startsWith("http") ? url : `https://${url}`);

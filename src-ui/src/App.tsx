@@ -95,6 +95,8 @@ const AppInner: React.FC = () => {
     deleteProfile,
     switchProfile,
     openTabInProfile,
+    themeEnabled,
+    togglePageTheme,
   } = useBrowser();
 
   const [inputUrl, setInputUrl] = useState(activeTab?.url || "");
@@ -274,6 +276,8 @@ const AppInner: React.FC = () => {
         isStarred={isBookmarked(inputUrl)}
         onToggleDownloads={() => setDownloadsOpen(!downloadsOpen)}
         onToggleExtensions={() => setActiveTool(activeTool === "extensions" ? "home" : "extensions")}
+        isThemeActive={themeEnabled}
+        onToggleTheme={togglePageTheme}
       />
 
       {/* ── Main Body: Slender Icon Dock + KAGE AI Panel + Viewport ── */}

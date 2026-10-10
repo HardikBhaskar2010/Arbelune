@@ -10,6 +10,7 @@ import {
   Star,
   Download,
   Blocks,
+  Palette,
 } from "lucide-react";
 
 interface OmniboxProps {
@@ -25,6 +26,8 @@ interface OmniboxProps {
   onToggleAi?: () => void;
   onToggleDownloads?: () => void;
   onToggleExtensions?: () => void;
+  isThemeActive?: boolean;
+  onToggleTheme?: () => void;
   canGoBack?: boolean;
   canGoForward?: boolean;
 }
@@ -42,6 +45,8 @@ export const Omnibox: React.FC<OmniboxProps> = ({
   onToggleAi,
   onToggleDownloads,
   onToggleExtensions,
+  isThemeActive = true,
+  onToggleTheme,
   canGoBack = false,
   canGoForward = false,
 }) => {
@@ -141,6 +146,17 @@ export const Omnibox: React.FC<OmniboxProps> = ({
 
       {/* ── Right Utility Actions + Profile Avatar ────────────────── */}
       <div className="omnibox__actions-right">
+        {onToggleTheme && (
+          <button
+            className={`omnibox__action-btn ${isThemeActive ? "omnibox__action-btn--active" : ""}`}
+            onClick={onToggleTheme}
+            aria-label={isThemeActive ? "Arbelune Theme: Active (Click to disable on this site)" : "Arbelune Theme: Disabled (Click to enable)"}
+            title={isThemeActive ? "Arbelune Theme: Active (Click to disable on this site)" : "Arbelune Theme: Disabled (Click to enable)"}
+            type="button"
+          >
+            <Palette size={16} strokeWidth={2} />
+          </button>
+        )}
         <button
           className={`omnibox__action-btn ${isStarred ? "omnibox__action-btn--active" : ""}`}
           onClick={handleStarClick}

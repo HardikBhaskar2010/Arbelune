@@ -37,4 +37,8 @@ export class NativeBrowserAdapter implements BrowserAdapter {
   async syncViewportBounds(bounds: import("./BrowserAdapter").ViewportBounds): Promise<void> {
     return invoke<void>("sync_viewport_bounds", { bounds });
   }
+
+  async injectPageTheme(tabId?: string, themeName = "google"): Promise<boolean> {
+    return invoke<boolean>("inject_page_theme", { tabId: tabId || null, themeName });
+  }
 }

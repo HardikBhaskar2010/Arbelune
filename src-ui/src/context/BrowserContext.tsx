@@ -10,6 +10,7 @@ import {
 } from "../ipc/client";
 import type { ProfileMetadata, ProfileKind } from "../ipc/client";
 import { listen } from "@tauri-apps/api/event";
+import { invoke } from "@tauri-apps/api/core";
 
 export interface TabState {
   id: string;
@@ -175,6 +176,10 @@ interface BrowserContextType {
   setAdBlockerEnabled: (val: boolean) => void;
   aiModel: string;
   setAiModel: (model: string) => void;
+
+  // Per-Site Theme Control
+  themeEnabled: boolean;
+  togglePageTheme: () => void;
 }
 
 const DEFAULT_PROFILES: ProfileMetadata[] = [
@@ -474,6 +479,35 @@ export const BrowserProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }
       })
       .catch((err) => console.warn("Failed to load active profile:", err));
+
+    invoke<any[]>("list_tabs")
+      .then((loadedTabs) => {
+        if (loadedTabs && loadedTabs.length > 0) {
+          setTabs(
+            loadedTabs.map((t) => {
+              const tabId = typeof t.identity?.tab_id === "string" ? t.identity.tab_id : (t.id || "tab-1");
+              const tabUrl = t.url || "";
+              return {
+                id: tabId,
+                title: t.title || (tabUrl ? tabUrl.replace(/^https?:\/\//, "").split("/")[0] : "New Tab"),
+                url: tabUrl,
+                canGoBack: t.can_go_back ?? false,
+                canGoForward: t.can_go_forward ?? false,
+                history: [tabUrl],
+                historyIndex: 0,
+                isLoading: false,
+                isSecure: tabUrl.startsWith("https"),
+                profile_id: t.identity?.profile_id || "personal",
+              };
+            })
+          );
+          const firstId = typeof loadedTabs[0].identity?.tab_id === "string" ? loadedTabs[0].identity.tab_id : loadedTabs[0].id;
+          if (firstId) {
+            setActiveTabId(firstId);
+          }
+        }
+      })
+      .catch((err) => console.warn("Failed to load initial tabs:", err));
   }, []);
 
   const createProfile = useCallback(
@@ -582,6 +616,16 @@ export const BrowserProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [glassOpacity, setGlassOpacity] = useState<number>(0.85);
   const [adBlockerEnabled, setAdBlockerEnabled] = useState<boolean>(true);
   const [aiModel, setAiModel] = useState<string>("GPT-4o");
+  const [themeEnabled, setThemeEnabled] = useState<boolean>(true);
+
+  const togglePageTheme = useCallback(() => {
+    setThemeEnabled((prev) => {
+      const next = !prev;
+      const themeParam = next ? "google" : "disable";
+      getBrowserAdapter().injectPageTheme?.(activeTabId, themeParam);
+      return next;
+    });
+  }, [activeTabId]);
 
   const activeTab = tabs.find((t) => t.id === activeTabId);
   const activeProfile = profiles.find((p) => p.id === (activeTab?.profile_id || activeProfileId)) || profiles[0];
@@ -637,6 +681,11 @@ export const BrowserProvider: React.FC<{ children: React.ReactNode }> = ({ child
             timestamp: new Date().toLocaleTimeString(),
           },
         ]);
+        if (url && url.toLowerCase().includes("google.")) {
+          if (themeEnabled) {
+            getBrowserAdapter().injectPageTheme?.(tab_id || activeTabId, "google");
+          }
+        }
       } else if (kind.NavigationFailed) {
         const { url, error_code, reason } = kind.NavigationFailed;
         setTabs((prev) =>
@@ -916,6 +965,14 @@ export const BrowserProvider: React.FC<{ children: React.ReactNode }> = ({ child
       );
     });
 
+    if (cleanUrl.toLowerCase().includes("google.")) {
+      if (themeEnabled) {
+        setTimeout(() => {
+          getBrowserAdapter().injectPageTheme?.(activeTabId, "google");
+        }, 350);
+      }
+    }
+
     if (!isTauriEnvironment()) {
       setTimeout(() => {
         setTabs((prev) =>
@@ -1148,6 +1205,9 @@ export const BrowserProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setAdBlockerEnabled,
         aiModel,
         setAiModel,
+
+        themeEnabled,
+        togglePageTheme,
       }}
     >
       {children}

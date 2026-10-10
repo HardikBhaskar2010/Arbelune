@@ -196,18 +196,25 @@ impl NativeSurfaceManager {
     pub unsafe fn set_hwnd_bounds(hwnd: isize, rect: &ViewportRect) -> Result<(), EngineError> {
         use windows_sys::Win32::Foundation::HWND;
         use windows_sys::Win32::UI::WindowsAndMessaging::{
-            SetWindowPos, SWP_FRAMECHANGED, SWP_NOACTIVATE, SWP_NOZORDER,
+            SetWindowPos, ShowWindow, SW_HIDE, SW_SHOW, SWP_FRAMECHANGED, SWP_NOACTIVATE, SWP_SHOWWINDOW,
         };
+
+        if rect.width <= 0 || rect.height <= 0 {
+            ShowWindow(hwnd as HWND, SW_HIDE);
+            return Ok(());
+        }
 
         let res = SetWindowPos(
             hwnd as HWND,
-            0 as HWND,
+            0 as HWND, // HWND_TOP: ensure child surface is in front of parent presentation surface
             rect.x,
             rect.y,
             rect.width,
             rect.height,
-            SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED,
+            SWP_NOACTIVATE | SWP_SHOWWINDOW | SWP_FRAMECHANGED,
         );
+
+        ShowWindow(hwnd as HWND, SW_SHOW);
 
         if res == 0 {
             Err(EngineError::Win32("SetWindowPos failed".to_string()))

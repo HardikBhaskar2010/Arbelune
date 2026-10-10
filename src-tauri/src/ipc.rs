@@ -206,14 +206,27 @@ pub async fn create_tab(
     })
 }
 
+async fn resolve_tab_id(tab_id: &str, tab_manager: &TabManager) -> Result<TabId, String> {
+    if let Ok(uuid) = Uuid::parse_str(tab_id) {
+        return Ok(TabId(uuid));
+    }
+    if let Some(active) = tab_manager.get_active_tab().await {
+        return Ok(active);
+    }
+    let tabs = tab_manager.list_tabs().await;
+    if let Some(first) = tabs.first() {
+        return Ok(first.id());
+    }
+    Err(format!("Could not resolve tab_id '{tab_id}' to an active tab"))
+}
+
 #[tauri::command]
 pub async fn close_tab(
     tab_id: String,
     tab_manager: State<'_, Arc<TabManager>>,
     cef_runtime: State<'_, Arc<CefRuntime>>,
 ) -> Result<(), String> {
-    let uuid = Uuid::parse_str(&tab_id).map_err(|e| e.to_string())?;
-    let tid = TabId(uuid);
+    let tid = resolve_tab_id(&tab_id, &tab_manager).await?;
 
     if let Some(browser_id) = tab_manager.browser_id_for_tab(tid).await {
         let _ = cef_runtime.request_close_browser_by_id(browser_id, false);
@@ -231,8 +244,7 @@ pub async fn switch_tab(
     tab_manager: State<'_, Arc<TabManager>>,
     cef_runtime: State<'_, Arc<CefRuntime>>,
 ) -> Result<(), String> {
-    let uuid = Uuid::parse_str(&tab_id).map_err(|e| e.to_string())?;
-    let tid = TabId(uuid);
+    let tid = resolve_tab_id(&tab_id, &tab_manager).await?;
 
     let prev_tab_id = tab_manager.get_active_tab().await;
     if let Some(prev_id) = prev_tab_id {
@@ -264,8 +276,7 @@ pub async fn navigate_to(
     tab_manager: State<'_, Arc<TabManager>>,
     cef_runtime: State<'_, Arc<CefRuntime>>,
 ) -> Result<(), String> {
-    let uuid = Uuid::parse_str(&tab_id).map_err(|e| e.to_string())?;
-    let tid = TabId(uuid);
+    let tid = resolve_tab_id(&tab_id, &tab_manager).await?;
     let tab = tab_manager
         .get_tab(tid)
         .await
@@ -277,9 +288,12 @@ pub async fn navigate_to(
         .await
         .map_err(|e| e.to_string())?;
 
-    if let Some(browser_id) = tab_manager.browser_id_for_tab(tid).await {
+    let browser_id = tab_manager.browser_id_for_tab(tid).await
+        .or_else(|| cef_runtime.first_browser_id());
+
+    if let Some(bid) = browser_id {
         cef_runtime
-            .load_url_by_browser_id(browser_id, &url)
+            .load_url_by_browser_id(bid, &url)
             .map_err(|e| e.to_string())?;
     } else {
         tracing::warn!("navigate_to: tab {tid} has no bound CEF browser ID yet");
@@ -294,8 +308,7 @@ pub async fn go_back(
     tab_manager: State<'_, Arc<TabManager>>,
     cef_runtime: State<'_, Arc<CefRuntime>>,
 ) -> Result<(), String> {
-    let uuid = Uuid::parse_str(&tab_id).map_err(|e| e.to_string())?;
-    let tid = TabId(uuid);
+    let tid = resolve_tab_id(&tab_id, &tab_manager).await?;
     let tab = tab_manager
         .get_tab(tid)
         .await
@@ -307,8 +320,11 @@ pub async fn go_back(
         .await
         .map_err(|e| e.to_string())?;
 
-    if let Some(browser_id) = tab_manager.browser_id_for_tab(tid).await {
-        let _ = cef_runtime.go_back_by_browser_id(browser_id);
+    let browser_id = tab_manager.browser_id_for_tab(tid).await
+        .or_else(|| cef_runtime.first_browser_id());
+
+    if let Some(bid) = browser_id {
+        let _ = cef_runtime.go_back_by_browser_id(bid);
     }
 
     Ok(())
@@ -320,8 +336,7 @@ pub async fn go_forward(
     tab_manager: State<'_, Arc<TabManager>>,
     cef_runtime: State<'_, Arc<CefRuntime>>,
 ) -> Result<(), String> {
-    let uuid = Uuid::parse_str(&tab_id).map_err(|e| e.to_string())?;
-    let tid = TabId(uuid);
+    let tid = resolve_tab_id(&tab_id, &tab_manager).await?;
     let tab = tab_manager
         .get_tab(tid)
         .await
@@ -333,8 +348,11 @@ pub async fn go_forward(
         .await
         .map_err(|e| e.to_string())?;
 
-    if let Some(browser_id) = tab_manager.browser_id_for_tab(tid).await {
-        let _ = cef_runtime.go_forward_by_browser_id(browser_id);
+    let browser_id = tab_manager.browser_id_for_tab(tid).await
+        .or_else(|| cef_runtime.first_browser_id());
+
+    if let Some(bid) = browser_id {
+        let _ = cef_runtime.go_forward_by_browser_id(bid);
     }
 
     Ok(())
@@ -347,8 +365,7 @@ pub async fn reload_tab(
     tab_manager: State<'_, Arc<TabManager>>,
     cef_runtime: State<'_, Arc<CefRuntime>>,
 ) -> Result<(), String> {
-    let uuid = Uuid::parse_str(&tab_id).map_err(|e| e.to_string())?;
-    let tid = TabId(uuid);
+    let tid = resolve_tab_id(&tab_id, &tab_manager).await?;
     let tab = tab_manager
         .get_tab(tid)
         .await
@@ -361,11 +378,46 @@ pub async fn reload_tab(
         .await
         .map_err(|e| e.to_string())?;
 
-    if let Some(browser_id) = tab_manager.browser_id_for_tab(tid).await {
-        let _ = cef_runtime.reload_by_browser_id(browser_id, ignore);
+    let browser_id = tab_manager.browser_id_for_tab(tid).await
+        .or_else(|| cef_runtime.first_browser_id());
+
+    if let Some(bid) = browser_id {
+        let _ = cef_runtime.reload_by_browser_id(bid, ignore);
     }
 
     Ok(())
+}
+
+#[tauri::command]
+pub async fn inject_page_theme(
+    tab_id: Option<String>,
+    theme_name: Option<String>,
+    tab_manager: State<'_, Arc<TabManager>>,
+    cef_runtime: State<'_, Arc<CefRuntime>>,
+) -> Result<bool, String> {
+    let tid = if let Some(ref id_str) = tab_id {
+        resolve_tab_id(id_str, &tab_manager).await?
+    } else {
+        tab_manager.get_active_tab().await.ok_or_else(|| "No active tab".to_string())?
+    };
+
+    let browser_id = tab_manager.browser_id_for_tab(tid).await
+        .or_else(|| cef_runtime.first_browser_id());
+
+    if let Some(bid) = browser_id {
+        let script = match theme_name.as_deref().unwrap_or("google") {
+            "disable" | "none" | "remove" => kage_engine::themes::GOOGLE_THEME_REMOVE_SCRIPT,
+            "google" | "google_liquid_glass" => kage_engine::themes::GOOGLE_THEME_INJECTOR_SCRIPT,
+            _ => kage_engine::themes::GOOGLE_THEME_INJECTOR_SCRIPT,
+        };
+        cef_runtime
+            .execute_javascript_by_browser_id(bid, script)
+            .map_err(|e| e.to_string())?;
+        Ok(true)
+    } else {
+        tracing::warn!("inject_page_theme: tab {tid} has no bound CEF browser ID");
+        Ok(false)
+    }
 }
 
 #[tauri::command]
@@ -504,18 +556,22 @@ pub async fn sync_viewport_bounds(
 ) -> Result<(), String> {
     tracing::debug!("IPC: sync_viewport_bounds: {:?}", bounds);
 
-    let layout = surface_manager
-        .update_layout(bounds.width, bounds.height, bounds.scale_factor)
-        .map_err(|e| e.to_string())?;
+    let content_rect = if bounds.width > 0 && bounds.height > 0 && (bounds.x > 0 || bounds.y > 0) {
+        kage_engine::ViewportRect::new(bounds.x, bounds.y, bounds.width, bounds.height)
+    } else {
+        let layout = surface_manager
+            .update_layout(bounds.width, bounds.height, bounds.scale_factor)
+            .map_err(|e| e.to_string())?;
+        layout.cef_content_rect
+    };
 
     tracing::info!(
-        "sync_viewport_bounds: WebView2 top_chrome={:?}, CEF content={:?}",
-        layout.top_chrome_rect,
-        layout.cef_content_rect,
+        "sync_viewport_bounds: positioning CEF child at {:?}",
+        content_rect,
     );
 
     #[cfg(windows)]
-    cef_runtime.resize_all_browsers(&layout.cef_content_rect);
+    cef_runtime.resize_all_browsers(&content_rect);
 
     Ok(())
 }

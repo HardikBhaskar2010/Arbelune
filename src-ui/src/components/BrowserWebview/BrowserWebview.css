@@ -5,7 +5,7 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: var(--color-bg-base);
+  background: transparent !important;
   overflow: hidden;
 }
 
@@ -36,116 +36,7 @@
   flex-direction: column;
   overflow: hidden;
   position: relative;
-}
-
-/* ─── Viewport Top Chrome Header ──────────────────────────────────── */
-.webview-site-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 6px 14px;
-  background: rgba(30, 8, 18, 0.85);
-  backdrop-filter: var(--glass-blur-sm);
-  border-bottom: 1px solid var(--color-border-subtle);
-  font-size: var(--text-xs);
-  flex-shrink: 0;
-  z-index: var(--z-raised);
-}
-
-.webview-site-brand {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-width: 0;
-}
-
-.webview-site-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-weight: var(--weight-semibold);
-  font-size: var(--text-xs);
-  padding: 3px 8px;
-  border-radius: var(--radius-full);
-  line-height: 1;
-  flex-shrink: 0;
-}
-
-.webview-site-pill--secure {
-  color: #34d399;
-  background: rgba(16, 185, 129, 0.15);
-  border: 1px solid rgba(16, 185, 129, 0.25);
-}
-
-.webview-site-pill--insecure {
-  color: #f87171;
-  background: rgba(239, 68, 68, 0.15);
-  border: 1px solid rgba(239, 68, 68, 0.25);
-}
-
-.webview-site-host {
-  color: var(--color-text-secondary);
-  font-family: var(--font-data);
-  font-size: var(--text-xs);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 480px;
-}
-
-.webview-profile-chip {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 7px;
-  font-family: var(--font-mono);
-  font-size: 0.625rem;
-  font-weight: var(--weight-medium);
-  text-transform: uppercase;
-  color: var(--kage-peach);
-  background: rgba(69, 9, 32, 0.7);
-  border: 1px solid rgba(218, 98, 125, 0.25);
-  border-radius: var(--radius-sm);
-  letter-spacing: 0.04em;
-}
-
-.webview-site-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  flex-shrink: 0;
-}
-
-/* ─── Button Micro-interactions (Emil Kowalski Physics) ──────────── */
-.webview-site-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  border-radius: var(--radius-sm);
-  border: 1px solid transparent;
-  background: transparent;
-  color: var(--color-text-muted);
-  cursor: pointer;
-  transition: transform var(--duration-press) var(--ease-emil-out),
-              background var(--duration-fast) var(--ease-smooth),
-              color var(--duration-fast) var(--ease-smooth),
-              border-color var(--duration-fast) var(--ease-smooth);
-}
-
-.webview-site-btn:hover {
-  color: #ffffff;
-  background: rgba(218, 98, 125, 0.2);
-  border-color: rgba(218, 98, 125, 0.3);
-}
-
-.webview-site-btn:active {
-  transform: scale(0.95);
-}
-
-.webview-site-btn:focus-visible {
-  outline: 2px solid var(--color-accent-primary);
-  outline-offset: 1px;
+  background: transparent !important;
 }
 
 /* ─── Windowed CEF Child Surface (Aperture: 60-120 FPS GPU) ──────── */

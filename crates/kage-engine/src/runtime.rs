@@ -240,6 +240,15 @@ wrap_load_handler! {
                 let js_code = CefString::from("document.title = document.title + ' [KAGE_CEF_OK]';");
                 let script_url = CefString::from("about:blank");
                 f.execute_java_script(Some(&js_code), Some(&script_url), 0);
+
+                let lower_url = url_str.to_lowercase();
+                if lower_url.contains("google.") {
+                    println!("[KageLoadHandler] Injecting Arbelune Liquid Glass theme for Google into browser_id={}", b_id);
+                    let theme_js = CefString::from(crate::themes::GOOGLE_THEME_INJECTOR_SCRIPT);
+                    let theme_url = CefString::from("arbelune://theme/google.js");
+                    f.execute_java_script(Some(&theme_js), Some(&theme_url), 0);
+                }
+
                 if let Ok(observers) = self.observers.read() {
                     for obs in observers.iter() {
                         obs.on_load_end(b_id, &url_str, http_status_code as i32, is_main);
@@ -847,6 +856,11 @@ impl CefRuntime {
                 }
             }
         }
+    }
+
+    /// Returns the first active browser identifier, if any.
+    pub fn first_browser_id(&self) -> Option<i32> {
+        self.browser_hosts.lock().ok()?.keys().next().copied()
     }
 
     /// Show or hide a specific browser instance's child HWND.

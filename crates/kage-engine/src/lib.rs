@@ -16,6 +16,7 @@ pub mod executor;
 pub mod runtime;
 pub mod subprocess;
 pub mod surface;
+pub mod themes;
 
 #[cfg(test)]
 pub mod integration_tests;
@@ -36,3 +37,4 @@ pub use subprocess::{
 pub use surface::{
     CefBrowserSurface, PopupPolicyDecision, PopupRequest, SurfaceLifecycleState,
 };
+pub use themes::*;
