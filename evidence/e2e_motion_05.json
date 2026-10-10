@@ -2,10 +2,10 @@
     "test_id":  "E2E-MOTION-05",
     "environment":  {
                         "cef_version":  "152.0.6",
-                        "timestamp":  "2026-10-10T13:43:02.3332378Z",
+                        "timestamp":  "2026-10-10T15:13:32.6717452Z",
                         "os_version":  "Microsoft Windows NT 10.0.26300.0",
                         "build_profile":  "dev",
-                        "git_sha":  "b8d3024ac101ab2d148ac8293ae5a0b546ae6dda"
+                        "git_sha":  "335c5f4f4c47d3e40d11d3a4e75eff1a29d026ad"
                     },
     "governance_lineage":  {
                                "task_id":  "task_takeover_physical_e2e_005",
@@ -30,7 +30,7 @@
                            "injected_form_value":  "742 Evergreen Terrace, Springfield, OR 97477",
                            "pre_takeover_dom_hash":  "sha256:4e22a97c34d724f0564dcb54f9e2c3b5174f6166255d269ee2e3a8a8e992268e",
                            "foreground_window_verified":  false,
-                           "host_hwnd":  "0x0044091A",
+                           "host_hwnd":  "0x00610332",
                            "fresh_observation_id":  "obs_fresh_resync_takeover_8821",
                            "system_input_events_dispatched":  0,
                            "cdp_target_id":  "cef_target_takeover_e2e_5"
