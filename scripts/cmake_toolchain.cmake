@@ -1,0 +1,7 @@
+set(CMAKE_SYSTEM_NAME Windows)
+set(CMAKE_SYSTEM_PROCESSOR AMD64)
+set(CMAKE_TRY_COMPILE_TARGET_TYPE "STATIC_LIBRARY" CACHE STRING "try compile target" FORCE)
+set(CMAKE_LINKER "C:/Users/sneha/.llvm/SourceDir/LLVM/bin/lld-link.exe" CACHE FILEPATH "linker" FORCE)
+set(CMAKE_AR "C:/Users/sneha/.llvm/SourceDir/LLVM/bin/lib.exe" CACHE FILEPATH "archiver" FORCE)
+set(CMAKE_RC_COMPILER "C:/Users/sneha/.llvm/SourceDir/LLVM/bin/rc.exe" CACHE FILEPATH "rc" FORCE)
+set(CMAKE_MT "C:/Users/sneha/.llvm/SourceDir/LLVM/bin/mt.exe" CACHE FILEPATH "mt" FORCE)

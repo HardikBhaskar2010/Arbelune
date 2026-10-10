@@ -27,6 +27,8 @@ $env:CXX = "$llvm_bin\cl.exe"
 $env:CMAKE_LINKER = "$llvm_bin\lld-link.exe"
 $env:RC = "$llvm_bin\rc.exe"
 $env:MT = "$llvm_bin\mt.exe"
+$env:CMAKE_TOOLCHAIN_FILE = "$PSScriptRoot\cmake_toolchain.cmake"
+$env:CMAKE_TOOLCHAIN_FILE_x86_64_pc_windows_msvc = "$PSScriptRoot\cmake_toolchain.cmake"
 
 & cargo @args
 $cargoExitCode = $LASTEXITCODE

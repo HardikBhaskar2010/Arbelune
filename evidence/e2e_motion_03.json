@@ -1,0 +1,32 @@
+﻿{
+    "test_id":  "E2E-MOTION-03",
+    "environment":  {
+                        "cef_version":  "152.0.6",
+                        "timestamp":  "2026-10-10T12:59:32.5783766Z",
+                        "os_version":  "Microsoft Windows NT 10.0.26300.0",
+                        "build_profile":  "dev",
+                        "git_sha":  "92e7d0050eee6031a455808de98e83ad6d2efb73"
+                    },
+    "governance_lineage":  {
+                               "justification":  "Tab strip management; no agent tool dispatch",
+                               "status":  "N/A"
+                           },
+    "execution_status":  "PASSED",
+    "artifacts":  [
+                      "evidence/e2e_motion_03.json"
+                  ],
+    "presentation_ui":  {
+                            "profiles":  [
+                                             "Personal",
+                                             "Ephemeral Sandbox"
+                                         ],
+                            "active_tab_id":  "tab-a",
+                            "tab_count":  2
+                        },
+    "native_browser":  {
+                           "persistent_profile_isolated":  true,
+                           "cross_talk_detected":  false,
+                           "storage_isolation_verified":  true,
+                           "ephemeral_profile_wiped_on_close":  true
+                       }
+}
