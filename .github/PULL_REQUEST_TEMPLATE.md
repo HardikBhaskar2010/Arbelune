@@ -9,7 +9,7 @@ Provide a clear and concise description of the changes introduced in this pull r
 
 ## 🛡️ Architectural Contracts & Invariants Checklist
 
-Please confirm that this pull request complies with KAGE's 10 Inviolable Architecture Contracts:
+Please confirm that this pull request complies with Arbelune's 10 Inviolable Architecture Contracts:
 
 - [ ] **INV-01:** AI never directly accesses CEF or Chromium internals.
 - [ ] **INV-02:** All mutating and capability actions route through the typed Rust `ToolBus`.
