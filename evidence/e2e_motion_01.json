@@ -2,10 +2,10 @@
     "test_id":  "E2E-MOTION-01",
     "environment":  {
                         "cef_version":  "152.0.6",
-                        "timestamp":  "2026-10-10T12:58:35.5660011Z",
+                        "timestamp":  "2026-10-10T13:41:57.3155577Z",
                         "os_version":  "Microsoft Windows NT 10.0.26300.0",
                         "build_profile":  "dev",
-                        "git_sha":  "92e7d0050eee6031a455808de98e83ad6d2efb73"
+                        "git_sha":  "b8d3024ac101ab2d148ac8293ae5a0b546ae6dda"
                     },
     "governance_lineage":  {
                                "justification":  "Host initialization; no agent tool dispatches admitted",
@@ -22,11 +22,11 @@
                             "app_ready":  true
                         },
     "native_browser":  {
-                           "scoped_tree_working_set_mb":  990.55,
-                           "parent_hwnd":  "0x00420848",
+                           "scoped_tree_working_set_mb":  748.3,
+                           "parent_hwnd":  "0x00000000",
                            "cdp_url":  "about:blank",
-                           "browser_surface_hwnd":  "0x00420848",
-                           "host_hwnd":  "0x000F08F2",
-                           "render_widget_hwnd":  "0x001F05FC"
+                           "browser_surface_hwnd":  "0x00000000",
+                           "host_hwnd":  "0x0044091A",
+                           "render_widget_hwnd":  "0x0018090C"
                        }
 }

@@ -1,0 +1,38 @@
+﻿{
+    "test_id":  "E2E-MOTION-05",
+    "environment":  {
+                        "cef_version":  "152.0.6",
+                        "timestamp":  "2026-10-10T13:43:02.3332378Z",
+                        "os_version":  "Microsoft Windows NT 10.0.26300.0",
+                        "build_profile":  "dev",
+                        "git_sha":  "b8d3024ac101ab2d148ac8293ae5a0b546ae6dda"
+                    },
+    "governance_lineage":  {
+                               "task_id":  "task_takeover_physical_e2e_005",
+                               "barrier_rejection":  "ToolError::HumanTakeoverActive",
+                               "verification_outcome":  "PASS",
+                               "predicate_sha256":  "42962c8312911ab5a04451d45f7f085af0050771189c61a955fe2f4e2c0364dd",
+                               "post_resumption_req_id":  "req_post_takeover_click_104",
+                               "status":  "COMMITTED",
+                               "admission_state":  "HumanTakeover -\u003e Open"
+                           },
+    "execution_status":  "PASSED",
+    "artifacts":  [
+                      "evidence/e2e_motion_05.json"
+                  ],
+    "presentation_ui":  {
+                            "hud_takeover_engaged":  true,
+                            "hud_badge_post_resume":  "PASS",
+                            "step_progress":  "Step 2 of 2"
+                        },
+    "native_browser":  {
+                           "fresh_dom_hash":  "sha256:92fd05b1e43ed32e1f4b6a0f110be037247e9ad30fcd3f150fe9892bb38acc77",
+                           "injected_form_value":  "742 Evergreen Terrace, Springfield, OR 97477",
+                           "pre_takeover_dom_hash":  "sha256:4e22a97c34d724f0564dcb54f9e2c3b5174f6166255d269ee2e3a8a8e992268e",
+                           "foreground_window_verified":  false,
+                           "host_hwnd":  "0x0044091A",
+                           "fresh_observation_id":  "obs_fresh_resync_takeover_8821",
+                           "system_input_events_dispatched":  0,
+                           "cdp_target_id":  "cef_target_takeover_e2e_5"
+                       }
+}

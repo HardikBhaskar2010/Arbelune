@@ -48,12 +48,15 @@
 > [!NOTE]
 > **Development Status Notice:**  
 > • **Milestone 1 (Core Architecture & 34 Contract Gates):** **100% Sealed & Passing** in automated CI (`python scripts/verify_contracts.py`).  
-> • **Milestone 2 (Full Product Tested in Motion):** **Active Acceptance Campaign**. Verified on live Windows desktop (`E2E-MOTION-01` Clean Startup, `E2E-MOTION-02` Omnibox Navigation, `E2E-MOTION-03` Multi-Profile Isolation). Evidence recorded in [`evidence/`](evidence/).  
+> • **Milestone 2 (Full Product Tested in Motion):** **Operational Acceptance Run Passed**. Verified across 7 physical workflows on live Windows desktop (`E2E-MOTION-01` through `08`: Clean Startup, Omnibox Navigation, Multi-Profile Isolation, Supervisory Takeover, Atomic STOP, Non-Idempotent Recovery, Clean Teardown). Full evidence recorded in [`evidence/`](evidence/) and documented in the [Desktop Acceptance Report](docs/06-testing/Desktop_Acceptance_Report.md).  
 > • **Milestone 3 (Model B Release Qualification):** Production OS renderer sandbox restrictions (`Untrusted` integrity `0x0000`, `JOB_OBJECT_UILIMIT_ALL`) are **explicitly pending final release candidate qualification**.
 
 ---
 
 ## <img src="public/icons/terminal.svg" width="20" height="20" align="absmiddle" /> Quick Start & Releases
+
+> [!TIP]
+> **Try the 90-Second Walkthrough:** See the [90-Second Reproducible Demo Guide](docs/01-product/Demo_Guide.md) to witness governed actions, supervisory takeover, and atomic STOP in under two minutes.
 
 ### Option A: Pre-Built Development Prerelease
 For developers evaluating the desktop runtime without compiling native CEF from source:
@@ -198,11 +201,11 @@ KAGE is fully documented across 25 foundational specifications:
 
 | Area | Specifications |
 |---|---|
-| **Product & Vision** | [PRD](docs/01-product/PRD.md) · [Requirements](docs/01-product/Requirements.md) · [Technical Design](docs/Design.md) |
+| **Product & Vision** | [PRD](docs/01-product/PRD.md) · [Requirements](docs/01-product/Requirements.md) · [Adoption Strategy](docs/01-product/Adoption_Strategy.md) · [90-Sec Demo Guide](docs/01-product/Demo_Guide.md) · [Technical Design](docs/Design.md) |
 | **Architecture** | [Master Architecture](docs/02-architecture/Architecture.md) · [CEF Integration](docs/02-architecture/CEF_Integration.md) · [Tauri Architecture](docs/02-architecture/Tauri_Architecture.md) · [Architecture Contracts](docs/02-architecture/Architecture_Contracts.md) |
 | **Core Subsystems** | [Tool Bus](docs/03-core/Tool_System.md) · [Context Engine](docs/03-core/Context_Engine.md) · [Micro Inspect](docs/03-core/Micro_Inspect.md) · [Workspaces](docs/03-core/Workspace_System.md) |
 | **Intelligence** | [AI Architecture](docs/04-ai/AI_Architecture.md) · [DevTools Architecture](docs/05-devtools/DevTools_Architecture.md) |
-| **Testing & Quality** | [Testing Lab](docs/06-testing/Testing_Lab.md) · [Testing Strategy](docs/06-testing/Testing_Strategy.md) · [E2E Acceptance Matrix](docs/06-testing/E2E_Acceptance_Matrix.md) |
+| **Testing & Quality** | [Testing Lab](docs/06-testing/Testing_Lab.md) · [Testing Strategy](docs/06-testing/Testing_Strategy.md) · [E2E Acceptance Matrix](docs/06-testing/E2E_Acceptance_Matrix.md) · [Desktop Acceptance Report](docs/06-testing/Desktop_Acceptance_Report.md) |
 | **Security & Data** | [Security Model](docs/08-security/Security_Model.md) · [Data Model](docs/07-platform/Data_Model.md) · [Plugin API](docs/07-platform/Plugin_API.md) |
 | **UI & Experience** | [Liquid Glass Design System](docs/09-ui/Design_System.md) |
 | **Milestone Reports** | [Phase 11 Report (M11 Hardened Shell)](docs/reports/M11_Hardened_Shell_Integration.md) · [Ground Truth Audit](docs/KAGE_Ground_Truth_Audit.md) |

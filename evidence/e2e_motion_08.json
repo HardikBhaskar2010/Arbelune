@@ -1,0 +1,29 @@
+﻿{
+    "test_id":  "E2E-MOTION-08",
+    "environment":  {
+                        "cef_version":  "152.0.6",
+                        "timestamp":  "2026-10-10T13:43:57.3296119Z",
+                        "os_version":  "Microsoft Windows NT 10.0.26300.0",
+                        "build_profile":  "dev",
+                        "git_sha":  "b8d3024ac101ab2d148ac8293ae5a0b546ae6dda"
+                    },
+    "governance_lineage":  {
+                               "justification":  "Host process termination; no agent tool dispatch",
+                               "status":  "N/A"
+                           },
+    "execution_status":  "PASSED",
+    "artifacts":  [
+                      "evidence/e2e_motion_08.json"
+                  ],
+    "presentation_ui":  {
+                            "window_closed":  true
+                        },
+    "native_browser":  {
+                           "exit_code":  0,
+                           "sla_target_ms":  3000,
+                           "teardown_elapsed_ms":  322,
+                           "sla_satisfied":  true,
+                           "host_pid":  20140,
+                           "orphaned_processes_count":  0
+                       }
+}

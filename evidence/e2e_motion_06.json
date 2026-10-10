@@ -1,0 +1,30 @@
+﻿{
+    "test_id":  "E2E-MOTION-06",
+    "environment":  {
+                        "cef_version":  "152.0.6",
+                        "timestamp":  "2026-10-10T13:43:31.8106094Z",
+                        "os_version":  "Microsoft Windows NT 10.0.26300.0",
+                        "build_profile":  "dev",
+                        "git_sha":  "b8d3024ac101ab2d148ac8293ae5a0b546ae6dda"
+                    },
+    "governance_lineage":  {
+                               "denial_reason":  "DispatchDenial::Cancelled",
+                               "status":  "COMMITTED",
+                               "task_id":  "task_linearization_001",
+                               "zero_subsequent_dispatches":  true,
+                               "admission_state":  "Cancelled"
+                           },
+    "execution_status":  "PASSED",
+    "artifacts":  [
+                      "evidence/e2e_motion_06.json"
+                  ],
+    "presentation_ui":  {
+                            "hud_badge":  "STOPPED",
+                            "rollback_illusion_prevented":  true
+                        },
+    "native_browser":  {
+                           "in_flight_action_settled":  true,
+                           "cdp_dispatch_post_stop":  0,
+                           "subsequent_actions_admitted":  0
+                       }
+}

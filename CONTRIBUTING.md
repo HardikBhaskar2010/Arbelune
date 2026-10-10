@@ -1,8 +1,10 @@
 # Contributing to KAGE (影)
 
-Thank you for your interest in contributing to **KAGE (影)** — the developer-first autonomous browser and instrumentation workstation!
+Thank you for your interest in contributing to **KAGE (影)** — a governed browser runtime for AI agents, with controlled actions, verified outcomes, and human takeover!
 
-KAGE is an ambitious open-source project uniting native Chromium rendering, high-velocity DevTools, and permission-governed autonomous agent intelligence. We welcome contributions ranging from bug fixes and documentation to new developer tools and engine improvements.
+KAGE is an ambitious open-source project uniting native Chromium rendering, high-velocity DevTools, and permission-governed autonomous agent intelligence. We welcome contributions ranging from bug fixes and documentation to new developer tools, agent SDK adapters, and engine improvements.
+
+Before contributing, we encourage reviewing our [Adoption Strategy](docs/01-product/Adoption_Strategy.md) and trying the [90-Second Demo Guide](docs/01-product/Demo_Guide.md).
 
 ---
 
@@ -91,5 +93,15 @@ npm run tauri dev
    * `docs: clarify CEF-02 development topology`
 3. **Run CI Gates:** Ensure `python scripts/verify_contracts.py` and `cargo test --workspace` pass with zero failures.
 4. **Submit PR:** Fill out the [Pull Request Template](.github/PULL_REQUEST_TEMPLATE.md) and link relevant issues.
+
+---
+
+## 7. Community Triage & Response SLAs
+
+To ensure a welcoming, responsive open-source environment:
+* **24-Hour First Response SLA:** Maintainers review, triage, and acknowledge new bug reports and feature requests within 24 hours.
+* **Bug Reports:** Please file bug reports using our [Bug Report Template](.github/ISSUE_TEMPLATE/bug_report.yml) including OS version, display DPI, and reproduction steps.
+* **Feature Requests:** Submit ideas through our [Feature Request Template](.github/ISSUE_TEMPLATE/feature_request.yml).
+* **Security Concerns:** Please review [SECURITY.md](SECURITY.md) and report security issues responsibly.
 
 Thank you for helping build the future of autonomous web browsing!

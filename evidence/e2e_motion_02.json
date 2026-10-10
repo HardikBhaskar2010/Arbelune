@@ -2,10 +2,10 @@
     "test_id":  "E2E-MOTION-02",
     "environment":  {
                         "cef_version":  "152.0.6",
-                        "timestamp":  "2026-10-10T12:59:32.5554010Z",
+                        "timestamp":  "2026-10-10T13:42:35.2867428Z",
                         "os_version":  "Microsoft Windows NT 10.0.26300.0",
                         "build_profile":  "dev",
-                        "git_sha":  "92e7d0050eee6031a455808de98e83ad6d2efb73"
+                        "git_sha":  "b8d3024ac101ab2d148ac8293ae5a0b546ae6dda"
                     },
     "governance_lineage":  {
                                "justification":  "Human navigation via Tauri IPC navigate_to; no ToolBus dispatch",
@@ -29,8 +29,8 @@
                                                 "height":  812,
                                                 "x":  320
                                             },
-                           "host_hwnd":  "0x000F08F2",
-                           "render_widget_hwnd":  "0x001F05FC",
+                           "host_hwnd":  "0x0044091A",
+                           "render_widget_hwnd":  "0x0018090C",
                            "overlap_px":  0
                        }
 }

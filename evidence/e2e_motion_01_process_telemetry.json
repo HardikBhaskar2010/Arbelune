@@ -3,336 +3,264 @@
     "samples":  [
                     {
                         "sample_index":  1,
-                        "timestamp":  "2026-10-10T12:58:44.8945096Z",
-                        "process_count":  17,
+                        "timestamp":  "2026-10-10T13:42:06.4167807Z",
+                        "process_count":  13,
                         "processes":  [
                                           {
-                                              "working_set_bytes":  232157184,
-                                              "pid":  12336,
+                                              "working_set_bytes":  175222784,
+                                              "pid":  20140,
                                               "name":  "kage-host",
-                                              "working_set_mb":  221.4
+                                              "working_set_mb":  167.11
                                           },
                                           {
-                                              "working_set_bytes":  33824768,
-                                              "pid":  7368,
+                                              "working_set_bytes":  32292864,
+                                              "pid":  17980,
                                               "name":  "kage-cef-subprocess",
-                                              "working_set_mb":  32.26
+                                              "working_set_mb":  30.8
                                           },
                                           {
-                                              "working_set_bytes":  17932288,
-                                              "pid":  2140,
+                                              "working_set_bytes":  17772544,
+                                              "pid":  13004,
                                               "name":  "kage-cef-subprocess",
-                                              "working_set_mb":  17.1
+                                              "working_set_mb":  16.95
                                           },
                                           {
-                                              "working_set_bytes":  135819264,
-                                              "pid":  21168,
+                                              "working_set_bytes":  136138752,
+                                              "pid":  18544,
                                               "name":  "msedgewebview2",
-                                              "working_set_mb":  129.53
+                                              "working_set_mb":  129.83
                                           },
                                           {
-                                              "working_set_bytes":  42270720,
-                                              "pid":  3572,
+                                              "working_set_bytes":  88473600,
+                                              "pid":  12556,
                                               "name":  "kage-cef-subprocess",
-                                              "working_set_mb":  40.31
+                                              "working_set_mb":  84.38
                                           },
                                           {
-                                              "working_set_bytes":  30425088,
-                                              "pid":  3044,
+                                              "working_set_bytes":  30380032,
+                                              "pid":  14640,
                                               "name":  "kage-cef-subprocess",
-                                              "working_set_mb":  29.02
+                                              "working_set_mb":  28.97
                                           },
                                           {
-                                              "working_set_bytes":  57122816,
-                                              "pid":  12564,
+                                              "working_set_bytes":  61444096,
+                                              "pid":  17492,
                                               "name":  "kage-cef-subprocess",
-                                              "working_set_mb":  54.48
+                                              "working_set_mb":  58.6
                                           },
                                           {
-                                              "working_set_bytes":  49745920,
-                                              "pid":  18656,
+                                              "working_set_bytes":  32841728,
+                                              "pid":  16812,
                                               "name":  "kage-cef-subprocess",
-                                              "working_set_mb":  47.44
-                                          },
-                                          {
-                                              "working_set_bytes":  52592640,
-                                              "pid":  4124,
-                                              "name":  "kage-cef-subprocess",
-                                              "working_set_mb":  50.16
-                                          },
-                                          {
-                                              "working_set_bytes":  49733632,
-                                              "pid":  14020,
-                                              "name":  "kage-cef-subprocess",
-                                              "working_set_mb":  47.43
-                                          },
-                                          {
-                                              "working_set_bytes":  56954880,
-                                              "pid":  15088,
-                                              "name":  "kage-cef-subprocess",
-                                              "working_set_mb":  54.32
-                                          },
-                                          {
-                                              "working_set_bytes":  67293184,
-                                              "pid":  6012,
-                                              "name":  "kage-cef-subprocess",
-                                              "working_set_mb":  64.18
+                                              "working_set_mb":  31.32
                                           },
                                           {
                                               "working_set_bytes":  9908224,
-                                              "pid":  16004,
+                                              "pid":  4424,
                                               "name":  "msedgewebview2",
                                               "working_set_mb":  9.45
                                           },
                                           {
-                                              "working_set_bytes":  87035904,
-                                              "pid":  3304,
+                                              "working_set_bytes":  85356544,
+                                              "pid":  20336,
                                               "name":  "msedgewebview2",
-                                              "working_set_mb":  83
+                                              "working_set_mb":  81.4
                                           },
                                           {
-                                              "working_set_bytes":  39391232,
-                                              "pid":  1932,
+                                              "working_set_bytes":  39084032,
+                                              "pid":  12512,
                                               "name":  "msedgewebview2",
-                                              "working_set_mb":  37.57
+                                              "working_set_mb":  37.27
                                           },
                                           {
-                                              "working_set_bytes":  19587072,
-                                              "pid":  19020,
+                                              "working_set_bytes":  19632128,
+                                              "pid":  3572,
                                               "name":  "msedgewebview2",
-                                              "working_set_mb":  18.68
+                                              "working_set_mb":  18.72
                                           },
                                           {
-                                              "working_set_bytes":  61575168,
-                                              "pid":  18020,
+                                              "working_set_bytes":  58728448,
+                                              "pid":  12440,
                                               "name":  "msedgewebview2",
-                                              "working_set_mb":  58.72
+                                              "working_set_mb":  56.01
                                           }
                                       ],
-                        "total_working_set_mb":  995.04
+                        "total_working_set_mb":  750.8
                     },
                     {
                         "sample_index":  2,
-                        "timestamp":  "2026-10-10T12:58:48.2169672Z",
-                        "process_count":  17,
+                        "timestamp":  "2026-10-10T13:42:08.6562909Z",
+                        "process_count":  13,
                         "processes":  [
                                           {
-                                              "working_set_bytes":  232267776,
-                                              "pid":  12336,
+                                              "working_set_bytes":  175235072,
+                                              "pid":  20140,
                                               "name":  "kage-host",
-                                              "working_set_mb":  221.51
+                                              "working_set_mb":  167.12
                                           },
                                           {
-                                              "working_set_bytes":  33841152,
-                                              "pid":  7368,
+                                              "working_set_bytes":  32448512,
+                                              "pid":  17980,
                                               "name":  "kage-cef-subprocess",
-                                              "working_set_mb":  32.27
+                                              "working_set_mb":  30.95
                                           },
                                           {
-                                              "working_set_bytes":  17932288,
-                                              "pid":  2140,
+                                              "working_set_bytes":  17772544,
+                                              "pid":  13004,
                                               "name":  "kage-cef-subprocess",
-                                              "working_set_mb":  17.1
+                                              "working_set_mb":  16.95
                                           },
                                           {
-                                              "working_set_bytes":  135856128,
-                                              "pid":  21168,
+                                              "working_set_bytes":  136110080,
+                                              "pid":  18544,
                                               "name":  "msedgewebview2",
-                                              "working_set_mb":  129.56
+                                              "working_set_mb":  129.8
                                           },
                                           {
-                                              "working_set_bytes":  42885120,
-                                              "pid":  3572,
+                                              "working_set_bytes":  88666112,
+                                              "pid":  12556,
                                               "name":  "kage-cef-subprocess",
-                                              "working_set_mb":  40.9
+                                              "working_set_mb":  84.56
                                           },
                                           {
-                                              "working_set_bytes":  30048256,
-                                              "pid":  3044,
+                                              "working_set_bytes":  30380032,
+                                              "pid":  14640,
                                               "name":  "kage-cef-subprocess",
-                                              "working_set_mb":  28.66
+                                              "working_set_mb":  28.97
                                           },
                                           {
-                                              "working_set_bytes":  57122816,
-                                              "pid":  12564,
+                                              "working_set_bytes":  61452288,
+                                              "pid":  17492,
                                               "name":  "kage-cef-subprocess",
-                                              "working_set_mb":  54.48
+                                              "working_set_mb":  58.61
                                           },
                                           {
-                                              "working_set_bytes":  49344512,
-                                              "pid":  18656,
+                                              "working_set_bytes":  32923648,
+                                              "pid":  16812,
                                               "name":  "kage-cef-subprocess",
-                                              "working_set_mb":  47.06
-                                          },
-                                          {
-                                              "working_set_bytes":  52211712,
-                                              "pid":  4124,
-                                              "name":  "kage-cef-subprocess",
-                                              "working_set_mb":  49.79
-                                          },
-                                          {
-                                              "working_set_bytes":  49324032,
-                                              "pid":  14020,
-                                              "name":  "kage-cef-subprocess",
-                                              "working_set_mb":  47.04
-                                          },
-                                          {
-                                              "working_set_bytes":  56954880,
-                                              "pid":  15088,
-                                              "name":  "kage-cef-subprocess",
-                                              "working_set_mb":  54.32
-                                          },
-                                          {
-                                              "working_set_bytes":  67342336,
-                                              "pid":  6012,
-                                              "name":  "kage-cef-subprocess",
-                                              "working_set_mb":  64.22
+                                              "working_set_mb":  31.4
                                           },
                                           {
                                               "working_set_bytes":  9908224,
-                                              "pid":  16004,
+                                              "pid":  4424,
                                               "name":  "msedgewebview2",
                                               "working_set_mb":  9.45
                                           },
                                           {
-                                              "working_set_bytes":  87035904,
-                                              "pid":  3304,
+                                              "working_set_bytes":  81113088,
+                                              "pid":  20336,
                                               "name":  "msedgewebview2",
-                                              "working_set_mb":  83
+                                              "working_set_mb":  77.36
                                           },
                                           {
-                                              "working_set_bytes":  39215104,
-                                              "pid":  1932,
+                                              "working_set_bytes":  39120896,
+                                              "pid":  12512,
                                               "name":  "msedgewebview2",
-                                              "working_set_mb":  37.4
+                                              "working_set_mb":  37.31
                                           },
                                           {
-                                              "working_set_bytes":  19587072,
-                                              "pid":  19020,
+                                              "working_set_bytes":  19632128,
+                                              "pid":  3572,
                                               "name":  "msedgewebview2",
-                                              "working_set_mb":  18.68
+                                              "working_set_mb":  18.72
                                           },
                                           {
-                                              "working_set_bytes":  61575168,
-                                              "pid":  18020,
+                                              "working_set_bytes":  58728448,
+                                              "pid":  12440,
                                               "name":  "msedgewebview2",
-                                              "working_set_mb":  58.72
+                                              "working_set_mb":  56.01
                                           }
                                       ],
-                        "total_working_set_mb":  994.16
+                        "total_working_set_mb":  747.2
                     },
                     {
                         "sample_index":  3,
-                        "timestamp":  "2026-10-10T12:58:52.2180475Z",
-                        "process_count":  17,
+                        "timestamp":  "2026-10-10T13:42:10.8880189Z",
+                        "process_count":  13,
                         "processes":  [
                                           {
-                                              "working_set_bytes":  221446144,
-                                              "pid":  12336,
+                                              "working_set_bytes":  175472640,
+                                              "pid":  20140,
                                               "name":  "kage-host",
-                                              "working_set_mb":  211.19
+                                              "working_set_mb":  167.34
                                           },
                                           {
-                                              "working_set_bytes":  33845248,
-                                              "pid":  7368,
+                                              "working_set_bytes":  32452608,
+                                              "pid":  17980,
                                               "name":  "kage-cef-subprocess",
-                                              "working_set_mb":  32.28
+                                              "working_set_mb":  30.95
                                           },
                                           {
-                                              "working_set_bytes":  17932288,
-                                              "pid":  2140,
+                                              "working_set_bytes":  17772544,
+                                              "pid":  13004,
                                               "name":  "kage-cef-subprocess",
-                                              "working_set_mb":  17.1
+                                              "working_set_mb":  16.95
                                           },
                                           {
-                                              "working_set_bytes":  135860224,
-                                              "pid":  21168,
+                                              "working_set_bytes":  136138752,
+                                              "pid":  18544,
                                               "name":  "msedgewebview2",
-                                              "working_set_mb":  129.57
+                                              "working_set_mb":  129.83
                                           },
                                           {
-                                              "working_set_bytes":  43495424,
-                                              "pid":  3572,
+                                              "working_set_bytes":  88371200,
+                                              "pid":  12556,
                                               "name":  "kage-cef-subprocess",
-                                              "working_set_mb":  41.48
+                                              "working_set_mb":  84.28
                                           },
                                           {
-                                              "working_set_bytes":  30048256,
-                                              "pid":  3044,
+                                              "working_set_bytes":  30019584,
+                                              "pid":  14640,
                                               "name":  "kage-cef-subprocess",
-                                              "working_set_mb":  28.66
+                                              "working_set_mb":  28.63
                                           },
                                           {
-                                              "working_set_bytes":  57122816,
-                                              "pid":  12564,
+                                              "working_set_bytes":  61460480,
+                                              "pid":  17492,
                                               "name":  "kage-cef-subprocess",
-                                              "working_set_mb":  54.48
+                                              "working_set_mb":  58.61
                                           },
                                           {
-                                              "working_set_bytes":  49344512,
-                                              "pid":  18656,
+                                              "working_set_bytes":  32940032,
+                                              "pid":  16812,
                                               "name":  "kage-cef-subprocess",
-                                              "working_set_mb":  47.06
-                                          },
-                                          {
-                                              "working_set_bytes":  52211712,
-                                              "pid":  4124,
-                                              "name":  "kage-cef-subprocess",
-                                              "working_set_mb":  49.79
-                                          },
-                                          {
-                                              "working_set_bytes":  49324032,
-                                              "pid":  14020,
-                                              "name":  "kage-cef-subprocess",
-                                              "working_set_mb":  47.04
-                                          },
-                                          {
-                                              "working_set_bytes":  56954880,
-                                              "pid":  15088,
-                                              "name":  "kage-cef-subprocess",
-                                              "working_set_mb":  54.32
-                                          },
-                                          {
-                                              "working_set_bytes":  65282048,
-                                              "pid":  6012,
-                                              "name":  "kage-cef-subprocess",
-                                              "working_set_mb":  62.26
+                                              "working_set_mb":  31.41
                                           },
                                           {
                                               "working_set_bytes":  9908224,
-                                              "pid":  16004,
+                                              "pid":  4424,
                                               "name":  "msedgewebview2",
                                               "working_set_mb":  9.45
                                           },
                                           {
-                                              "working_set_bytes":  87035904,
-                                              "pid":  3304,
+                                              "working_set_bytes":  81113088,
+                                              "pid":  20336,
                                               "name":  "msedgewebview2",
-                                              "working_set_mb":  83
+                                              "working_set_mb":  77.36
                                           },
                                           {
-                                              "working_set_bytes":  39215104,
-                                              "pid":  1932,
+                                              "working_set_bytes":  39157760,
+                                              "pid":  12512,
                                               "name":  "msedgewebview2",
-                                              "working_set_mb":  37.4
+                                              "working_set_mb":  37.34
                                           },
                                           {
-                                              "working_set_bytes":  19587072,
-                                              "pid":  19020,
+                                              "working_set_bytes":  19632128,
+                                              "pid":  3572,
                                               "name":  "msedgewebview2",
-                                              "working_set_mb":  18.68
+                                              "working_set_mb":  18.72
                                           },
                                           {
-                                              "working_set_bytes":  61575168,
-                                              "pid":  18020,
+                                              "working_set_bytes":  58728448,
+                                              "pid":  12440,
                                               "name":  "msedgewebview2",
-                                              "working_set_mb":  58.72
+                                              "working_set_mb":  56.01
                                           }
                                       ],
-                        "total_working_set_mb":  982.46
+                        "total_working_set_mb":  746.89
                     }
                 ],
     "budget_satisfied":  false,
-    "mean_working_set_mb":  990.55,
-    "host_pid":  12336
+    "mean_working_set_mb":  748.3,
+    "host_pid":  20140
 }
