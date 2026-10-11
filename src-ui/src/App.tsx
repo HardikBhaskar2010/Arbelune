@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import "./App.css";
 
 import {
@@ -26,7 +26,7 @@ import { getBrowserAdapter } from "./adapters/BrowserAdapter";
 import { TabStrip } from "./components/TabStrip/TabStrip";
 import { Omnibox } from "./components/Omnibox/Omnibox";
 import { IconSidebar } from "./components/IconSidebar/IconSidebar";
-import type { SidebarItem } from "./components/IconSidebar/IconSidebar";
+import type { SidebarItem, SidebarGroup } from "./components/IconSidebar/IconSidebar";
 import { AISidebar } from "./components/AISidebar/AISidebar";
 import { NewTab } from "./components/NewTab/NewTab";
 import { BrowserWebview } from "./components/BrowserWebview/BrowserWebview";
@@ -38,24 +38,11 @@ import { SettingsPage } from "./components/Settings/SettingsPage";
 import { ProfileBadge } from "./components/Profiles/ProfileBadge";
 import { ProfileSwitcherModal } from "./components/Profiles/ProfileSwitcherModal";
 import { ProfileEscalationModal } from "./components/Profiles/ProfileEscalationModal";
+import { CommandPalette } from "./components/CommandPalette";
 import { escalateSession as ipcEscalateSession } from "./ipc/client";
 
-// ─── Sidebar Items with Canonical KAGE Vector Icons (Linear + Filled) ────
-const SIDEBAR_ITEMS: SidebarItem[] = [
-  { id: "home",        icon: <KageIconHome size={18} strokeWidth={1.8} />,        label: "Home" },
-  { id: "ai",          icon: <KageIconAI size={18} strokeWidth={1.8} />,          label: "AI" },
-  { id: "inspect",     icon: <KageIconInspect size={18} strokeWidth={1.8} />,     label: "Inspect" },
-  { id: "dom",         icon: <KageIconDOM size={18} strokeWidth={1.8} />,         label: "DOM" },
-  { id: "network",     icon: <KageIconNetwork size={18} strokeWidth={1.8} />,     label: "Network" },
-  { id: "performance", icon: <KageIconPerformance size={18} strokeWidth={1.8} />, label: "Performance" },
-  { id: "console",     icon: <KageIconConsole size={18} strokeWidth={1.8} />,     label: "Console" },
-  { id: "storage",     icon: <KageIconStorage size={18} strokeWidth={1.8} />,     label: "Storage" },
-  { id: "security",    icon: <KageIconSecurity size={18} strokeWidth={1.8} />,    label: "Security" },
-  { id: "extensions",  icon: <KageIconExtensions size={18} strokeWidth={1.8} />,  label: "Extensions" },
-];
-
 const SIDEBAR_BOTTOM: SidebarItem[] = [
-  { id: "settings",    icon: <KageIconSettings size={18} strokeWidth={1.8} />,    label: "Settings" },
+  { id: "settings",    icon: <KageIconSettings size={18} strokeWidth={1.8} />,    label: "Settings",    shortcut: "Ctrl+," },
 ];
 
 const AppInner: React.FC = () => {
@@ -76,7 +63,9 @@ const AppInner: React.FC = () => {
     aiOpen,
     setAiOpen,
     setDevToolsOpen,
+    inspectMode,
     setInspectMode,
+    isLoadingDom,
 
     isBookmarked,
     toggleBookmark,
@@ -100,7 +89,111 @@ const AppInner: React.FC = () => {
   } = useBrowser();
 
   const [inputUrl, setInputUrl] = useState(activeTab?.url || "");
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const viewportStageRef = useRef<HTMLDivElement>(null);
+
+  // Grouped Navigation: WORKSPACE (Home, AI) and DEVELOPER TOOLS (Inspect, DOM, Network, Perf, Console, Storage, Security, Extensions)
+  const sidebarGroups: SidebarGroup[] = useMemo(() => [
+    {
+      id: "workspace",
+      label: "WORKSPACE",
+      items: [
+        {
+          id: "home",
+          icon: <KageIconHome size={18} strokeWidth={1.8} />,
+          label: "Home",
+          shortcut: "Ctrl+H",
+        },
+        {
+          id: "ai",
+          icon: <KageIconAI size={18} strokeWidth={1.8} />,
+          label: "AI",
+          shortcut: "Ctrl+Shift+A",
+          isRunning: aiOpen,
+        },
+      ],
+    },
+    {
+      id: "devtools",
+      label: "DEVELOPER TOOLS",
+      items: [
+        {
+          id: "inspect",
+          icon: <KageIconInspect size={18} strokeWidth={1.8} />,
+          label: "Inspect",
+          shortcut: "Ctrl+Shift+C",
+          isRunning: inspectMode,
+        },
+        {
+          id: "dom",
+          icon: <KageIconDOM size={18} strokeWidth={1.8} />,
+          label: "DOM",
+          shortcut: "Ctrl+Alt+I",
+          isRunning: isLoadingDom,
+        },
+        {
+          id: "network",
+          icon: <KageIconNetwork size={18} strokeWidth={1.8} />,
+          label: "Network",
+        },
+        {
+          id: "performance",
+          icon: <KageIconPerformance size={18} strokeWidth={1.8} />,
+          label: "Performance",
+        },
+        {
+          id: "console",
+          icon: <KageIconConsole size={18} strokeWidth={1.8} />,
+          label: "Console",
+        },
+        {
+          id: "storage",
+          icon: <KageIconStorage size={18} strokeWidth={1.8} />,
+          label: "Storage",
+        },
+        {
+          id: "security",
+          icon: <KageIconSecurity size={18} strokeWidth={1.8} />,
+          label: "Security",
+        },
+        {
+          id: "extensions",
+          icon: <KageIconExtensions size={18} strokeWidth={1.8} />,
+          label: "Extensions",
+        },
+      ],
+    },
+  ], [aiOpen, inspectMode, isLoadingDom]);
+
+  // Global Keyboard Shortcuts (Ctrl+K Command Palette, Ctrl+Shift+A AI, Ctrl+[ Sidebar Collapse)
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      // Toggle Command Palette on Ctrl+K / Cmd+K
+      if ((e.ctrlKey || e.metaKey) && (e.key === "k" || e.key === "K")) {
+        e.preventDefault();
+        setCommandPaletteOpen((prev) => !prev);
+        return;
+      }
+
+      // Quick toggle for AI Workspace: Ctrl+Shift+A / Cmd+Shift+A
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === "a" || e.key === "A")) {
+        e.preventDefault();
+        setAiOpen(!aiOpen);
+        return;
+      }
+
+      // Toggle Sidebar Collapse on Ctrl+[ / Cmd+[
+      if ((e.ctrlKey || e.metaKey) && (e.key === "[" || e.key === "{")) {
+        e.preventDefault();
+        setSidebarCollapsed((prev) => !prev);
+        return;
+      }
+    };
+
+    window.addEventListener("keydown", handleGlobalKeyDown);
+    return () => window.removeEventListener("keydown", handleGlobalKeyDown);
+  }, [aiOpen, setAiOpen]);
 
   // Synchronize viewport stage coordinates to native CEF child window (KAGE-ARCH-002)
   // Debounced and throttled to prevent IPC stalls and GPU thread lockups during smooth transitions
@@ -281,12 +374,17 @@ const AppInner: React.FC = () => {
       />
 
       {/* ── Main Body: Slender Icon Dock + KAGE AI Panel + Viewport ── */}
-      <div className="app__body">
+      <div
+        className="app__body"
+        style={{ "--current-sidebar-w": sidebarCollapsed ? "58px" : "210px" } as React.CSSProperties}
+      >
         <IconSidebar
-          items={SIDEBAR_ITEMS}
+          groups={sidebarGroups}
           bottomItems={SIDEBAR_BOTTOM}
           onSelect={handleSidebarSelect}
           activeId={activeTool}
+          collapsed={sidebarCollapsed}
+          onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
         />
 
         {/* KAGE AI Panel (Docked beside IconSidebar) */}
@@ -310,6 +408,7 @@ const AppInner: React.FC = () => {
               <NewTab
                 onNavigate={navigate}
                 onToggleAi={() => setAiOpen(!aiOpen)}
+                onOpenCommandPalette={() => setCommandPaletteOpen(true)}
               />
             ) : (
               <BrowserWebview url={activeTab?.url || ""} />
@@ -326,6 +425,12 @@ const AppInner: React.FC = () => {
 
       {/* Floating Downloads Popover */}
       <DownloadsPopover />
+
+      {/* Native Command Palette (Phase B - Priority 2) */}
+      <CommandPalette
+        isOpen={commandPaletteOpen}
+        onClose={() => setCommandPaletteOpen(false)}
+      />
 
       {/* Profiles Modal (Phase 7 - INV-10) */}
       <ProfileSwitcherModal

@@ -5,83 +5,93 @@
 
 :root {
   /* ─── Arbelune Canonical Design Tokens ────────────────────────────────── */
-  --arbelune-peach:     #F9DBBD;
-  --arbelune-pink:      #FFA5AB;
-  --arbelune-rose:      #DA627D;
-  --arbelune-magenta:   #A53860;
-  --arbelune-wine:      #450920;
-  --arbelune-neon:      #FF2D55;
+  --arbelune-rose:      #C78997;
+  --arbelune-peach:     #F5B297;
+  --arbelune-gold:      #F5D6A2;
+  --arbelune-cream:     #F5E4C4;
+  --arbelune-blue:      #8A99B1;
+  --arbelune-obsidian:  #0B0C10;
+  --arbelune-surface-elevated: #12141A;
+  --arbelune-surface-secondary: #191B23;
 
-  /* Backward-compatible aliases */
+  /* Backward-compatible & legacy aliases */
+  --arbelune-pink:      var(--arbelune-rose);
+  --arbelune-magenta:   #A86375;
+  --arbelune-wine:      #12141A;
+  --arbelune-neon:      #C78997;
+
   --kage-peach:         var(--arbelune-peach);
-  --kage-pink:          var(--arbelune-pink);
+  --kage-pink:          var(--arbelune-rose);
   --kage-rose:          var(--arbelune-rose);
   --kage-magenta:       var(--arbelune-magenta);
   --kage-wine:          var(--arbelune-wine);
 
   --glass-blur:         blur(20px);
-  --glass-border:       rgba(249, 219, 189, 0.15);
-  --glass-surface:      rgba(43, 14, 22, 0.75);
+  --glass-border:       rgba(245, 228, 196, 0.10);
+  --glass-surface:      rgba(11, 12, 16, 0.82);
   --chrome-height:      40px;
-  --sidebar-width:      54px;
+  --sidebar-width:      210px;
 
   /* ─── Color Aliases ─────────────────────────────────────────────────── */
   --color-peach:        var(--arbelune-peach);
-  --color-pink:         var(--arbelune-pink);
+  --color-pink:         var(--arbelune-rose);
   --color-rose:         var(--arbelune-rose);
   --color-magenta:      var(--arbelune-magenta);
-  --color-wine:         var(--arbelune-wine);
+  --color-wine:         var(--arbelune-obsidian);
+  --color-blue:         var(--arbelune-blue);
+  --color-gold:         var(--arbelune-gold);
 
-  --color-surface-1:    #2B0E16;  /* Darkest surface */
-  --color-surface-2:    #3A1421;  /* Mid surface */
-  --color-surface-3:    #5A2A3A;  /* Lighter surface */
-  --color-border:       #7A3A52;  /* Border */
-  --color-text-primary: #FCEDE0;  /* Text Primary (warm white) */
-  --color-text-secondary: #D8B8BA;/* Text Secondary */
+  --color-surface-1:    #0B0C10;  /* Primary background / deepest obsidian */
+  --color-surface-2:    #12141A;  /* Elevated surface */
+  --color-surface-3:    #191B23;  /* Secondary surface / interactive */
+  --color-border:       rgba(245, 228, 196, 0.10); /* Subtle border */
+  --color-text-primary: #F5E4C4;  /* Warm cream primary text */
+  --color-text-secondary: #8A99B1;/* Muted blue/slate secondary text */
 
   /* ─── Semantic Colour Roles ───────────────────────────────────────────── */
-  --color-bg-base:       #1a0810;
+  --color-bg-base:       #0B0C10;
   --color-bg-surface:    var(--glass-surface);
-  --color-bg-elevated:   rgba(58, 20, 33, 0.92);
-  --color-bg-overlay:    rgba(249, 219, 189, 0.06);
+  --color-bg-elevated:   rgba(18, 20, 26, 0.92);
+  --color-bg-overlay:    rgba(245, 228, 196, 0.05);
 
-  --color-border-subtle:  rgba(122, 58, 82, 0.4);
-  --color-border-default: rgba(122, 58, 82, 0.6);
-  --color-border-strong:  rgba(218, 98, 125, 0.5);
+  --color-border-subtle:  rgba(245, 228, 196, 0.08);
+  --color-border-default: rgba(245, 228, 196, 0.12);
+  --color-border-strong:  rgba(199, 137, 151, 0.35);
 
-  --color-text-muted:    rgba(252, 237, 224, 0.35);
-  --color-accent-primary: #DA627D;
-  --color-accent-hover:   #FFA5AB;
-  --color-accent-glow:    #DA627D;
-  --color-accent-error:   #f06070;
-  --color-accent-warn:    #f4a046;
-  --color-accent-success: #78d4a0;
-  --color-accent-info:    #6ab8f0;
-  --color-accent-active:  rgba(218, 98, 125, 0.18);
+  --color-text-muted:    rgba(138, 153, 177, 0.65);
+  --color-accent-primary: #C78997;
+  --color-accent-hover:   #F5B297;
+  --color-accent-glow:    #C78997;
+  --color-accent-secondary: #8A99B1;
+  --color-accent-gold:    #F5D6A2;
+  --color-accent-error:   #E06C75;
+  --color-accent-warn:    #E5C07B;
+  --color-accent-success: #78C697;
+  --color-accent-info:    #8A99B1;
+  --color-accent-active:  rgba(199, 137, 151, 0.18);
 
   /* ─── Liquid Glass ────────────────────────────────────────────────────── */
   --glass-blur-sm:  blur(8px);
   --glass-blur-md:  blur(16px);
-  --glass-blur-lg:  blur(28px);
-  --glass-blur-xl:  blur(48px);
+  --glass-blur-lg:  blur(24px);
+  --glass-blur-xl:  blur(36px);
 
-  --glass-bg-panel:     rgba(43, 14, 22, 0.82);
-  --glass-bg-modal:     rgba(30, 8, 18, 0.92);
-  --glass-border:       rgba(122, 58, 82, 0.55);
-  --glass-shadow:       0 8px 32px rgba(69, 9, 32, 0.6),
-                        0 0 0 1px rgba(218, 98, 125, 0.08);
-  --glass-glow-sm:      0 0 12px rgba(218, 98, 125, 0.18);
-  --glass-glow-md:      0 0 28px rgba(218, 98, 125, 0.28);
-  --glass-glow-lg:      0 0 56px rgba(218, 98, 125, 0.38);
+  --glass-bg-panel:     rgba(11, 12, 16, 0.86);
+  --glass-bg-modal:     rgba(18, 20, 26, 0.94);
+  --glass-shadow:       0 8px 32px rgba(0, 0, 0, 0.55),
+                        0 0 0 1px rgba(245, 228, 196, 0.06);
+  --glass-glow-sm:      0 0 12px rgba(199, 137, 151, 0.14);
+  --glass-glow-md:      0 0 24px rgba(199, 137, 151, 0.22);
+  --glass-glow-lg:      0 0 44px rgba(199, 137, 151, 0.30);
 
   /* Primary button gradient */
-  --btn-primary-bg: linear-gradient(135deg, #DA627D 0%, #A53860 100%);
-  --btn-primary-hover: linear-gradient(135deg, #FFA5AB 0%, #DA627D 100%);
+  --btn-primary-bg: linear-gradient(135deg, #C78997 0%, rgba(199, 137, 151, 0.75) 100%);
+  --btn-primary-hover: linear-gradient(135deg, #F5B297 0%, #C78997 100%);
 
-  /* ─── Typography (Pixel-faithful to public/Mockup_New Tab Screen.png) ─ */
-  --font-brand:     "Outfit", -apple-system, system-ui, sans-serif;
-  --font-display:   "Outfit", -apple-system, system-ui, sans-serif;
-  --font-chrome:    "Plus Jakarta Sans", "Inter", -apple-system, system-ui, sans-serif;
+  /* ─── Typography (Inter for chrome, Outfit for display/brand) ────────── */
+  --font-brand:     "Outfit", "Inter", -apple-system, system-ui, sans-serif;
+  --font-display:   "Outfit", "Inter", -apple-system, system-ui, sans-serif;
+  --font-chrome:    "Inter", "Plus Jakarta Sans", -apple-system, system-ui, sans-serif;
   --font-mono:      "JetBrains Mono", "Fira Code", monospace;
   --font-data:      "JetBrains Mono", monospace;
 
@@ -114,8 +124,8 @@
   --radius-sm:   4px;
   --radius-md:   8px;
   --radius-lg:   12px;
-  --radius-xl:   18px;
-  --radius-2xl:  24px;
+  --radius-xl:   16px;
+  --radius-2xl:  22px;
   --radius-full: 9999px;
 
   /* ─── Z-index ────────────────────────────────────────────────────────── */
@@ -138,16 +148,17 @@
   --duration-press:   160ms;
   --duration-fast:    150ms;
   --duration-normal:  250ms;
-  --duration-slow:    400ms;
+  --duration-slow:    350ms;
 
-  /* ─── Layout dimensions (matching Mockup_New Tab Screen.png) ──────────── */
-  --titlebar-height: 42px;     /* Top nav bar with KAGE logo + tabs */
-  --omnibox-height:  46px;     /* URL + search bar row */
-  --icon-sidebar-w:  64px;     /* Left collapsed icon dock */
-  --ai-sidebar-w:    360px;    /* Left-docked KAGE AI panel */
-  --tab-height:      34px;
+  /* ─── Layout dimensions ──────────────────────────────────────────────── */
+  --titlebar-height: 42px;     /* Top nav bar with Arbelune logo + tabs */
+  --omnibox-height:  44px;     /* URL + search bar row */
+  --icon-sidebar-w:  56px;     /* Left icon dock */
+  --ai-sidebar-w:    360px;    /* Left-docked Arbelune AI panel */
+  --tab-height:      32px;
 
-  /* ─── Active Tab Glow (Liquid Glass peach-to-burgundy) ────────────────── */
-  --tab-active-bg:   linear-gradient(135deg, rgba(218, 98, 125, 0.35) 0%, rgba(165, 56, 96, 0.55) 100%);
-  --tab-active-glow: 0 4px 18px rgba(218, 98, 125, 0.28);
+  /* ─── Active Tab & Pill States (Restrained soft rose) ─────────────────── */
+  --tab-active-bg:   rgba(199, 137, 151, 0.22);
+  --tab-active-border: rgba(199, 137, 151, 0.40);
+  --tab-active-glow: 0 2px 10px rgba(0, 0, 0, 0.35);
 }

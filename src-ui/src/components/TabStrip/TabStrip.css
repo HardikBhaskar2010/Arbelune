@@ -1,9 +1,9 @@
 .tab-strip {
   display: flex;
   align-items: center;
-  height: var(--tab-height);
-  padding: 0 var(--space-2);
-  gap: var(--space-2);
+  height: 100%;
+  padding: 0 4px;
+  gap: 4px;
   overflow-x: auto;
   overflow-y: hidden;
   flex: 1;
@@ -15,135 +15,183 @@
   display: none;
 }
 
-/* ─── Individual Tab (Liquid Glass Pill) ─────────────────────────── */
+/* ─── Individual Tab ──────────────────────────────────────────────── */
 .tab {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  height: 28px;
-  padding: 0 var(--space-2) 0 var(--space-3);
-  min-width: 90px;
-  max-width: 200px;
-  border-radius: var(--radius-md);
+  gap: 8px;
+  height: 30px;
+  padding: 0 8px 0 10px;
+  min-width: 110px;
+  max-width: 210px;
+  border-radius: 8px;
   border: 1px solid transparent;
   cursor: pointer;
   position: relative;
   flex-shrink: 0;
-  color: var(--color-text-secondary);
+  color: #8A99B1;
   background: transparent;
-  transition: background var(--duration-fast) var(--ease-emil-out),
-              border-color var(--duration-fast) var(--ease-emil-out),
-              color var(--duration-fast) var(--ease-emil-out),
-              transform var(--duration-press) var(--ease-emil-out);
+  outline: none;
+  transition: background 150ms var(--ease-emil-out),
+              border-color 150ms var(--ease-emil-out),
+              color 150ms var(--ease-emil-out),
+              transform 100ms var(--ease-emil-out);
   user-select: none;
 }
 
+/* Inactive Tab Hover: subtle charcoal-slate lift, no vertical jump */
 .tab:hover:not(.tab--active) {
-  background: rgba(218, 98, 125, 0.12);
-  border-color: rgba(218, 98, 125, 0.2);
-  color: var(--color-text-primary);
-  transform: translateY(-1px);
+  background: rgba(138, 153, 177, 0.08);
+  border-color: rgba(138, 153, 177, 0.12);
+  color: var(--arbelune-cream, #F5E4C4);
 }
 
 .tab:active {
-  transform: scale(0.97);
+  transform: scale(0.98);
 }
 
+/* ─── Active Tab: Darker Charcoal-Rose Surface & Thin Rose Rim ─────── */
 .tab--active {
-  background: linear-gradient(135deg, rgba(218, 98, 125, 0.40) 0%, rgba(165, 56, 96, 0.65) 100%);
-  color: #FFFFFF;
-  border: 1px solid rgba(255, 165, 171, 0.35);
-  box-shadow: 0 4px 16px rgba(218, 98, 125, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  background: rgba(24, 21, 27, 0.94);
+  border: 1px solid rgba(199, 137, 151, 0.26);
+  color: var(--arbelune-cream, #F5E4C4);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
-/* ─── Tab parts ──────────────────────────────────────────────────── */
+.tab--active:hover {
+  background: rgba(28, 24, 32, 0.96);
+  border-color: rgba(199, 137, 151, 0.32);
+}
+
+.tab:focus-visible {
+  outline: 2px solid rgba(199, 137, 151, 0.50);
+  outline-offset: 2px;
+}
+
+/* ─── Tab Parts ───────────────────────────────────────────────────── */
 .tab__favicon {
   display: flex;
   align-items: center;
+  justify-content: center;
   flex-shrink: 0;
-  color: var(--color-text-secondary);
+  color: #8A99B1;
   width: 14px;
   height: 14px;
+  transition: color 150ms var(--ease-emil-out);
+}
+
+.tab--active .tab__favicon {
+  color: var(--arbelune-rose, #C78997);
 }
 
 .tab-spinner {
-  animation: spin 0.8s linear infinite;
+  animation: tab-spin 0.8s linear infinite;
 }
 
-@keyframes spin {
+@keyframes tab-spin {
   to { transform: rotate(360deg); }
 }
 
 .tab__title {
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
+  font-size: 12.5px;
+  font-family: var(--font-chrome);
+  font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   flex: 1;
   min-width: 0;
+  letter-spacing: -0.01em;
+  line-height: 1;
 }
 
+.tab--active .tab__title {
+  font-weight: 550;
+  color: #F5E4C4;
+}
+
+/* ─── Close Button: Understated until Hover ────────────────────────── */
 .tab__close {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 18px;
   height: 18px;
-  border-radius: var(--radius-sm);
+  border-radius: 6px;
   border: none;
   background: transparent;
-  color: var(--color-text-muted);
+  color: #8A99B1;
   cursor: pointer;
   flex-shrink: 0;
   opacity: 0;
-  transition: opacity var(--duration-fast) var(--ease-emil-out),
-              background var(--duration-fast) var(--ease-emil-out),
-              color var(--duration-fast) var(--ease-emil-out),
-              transform 100ms var(--ease-emil-out);
+  transition: opacity 140ms var(--ease-emil-out),
+              background 140ms var(--ease-emil-out),
+              color 140ms var(--ease-emil-out);
   padding: 0;
+  margin-left: 2px;
 }
 
 .tab:hover .tab__close,
 .tab--active .tab__close {
-  opacity: 0.75;
+  opacity: 0.55;
 }
 
 .tab__close:hover {
-  background: rgba(239, 68, 68, 0.25);
-  color: #fca5a5;
-  transform: rotate(90deg) scale(1.1);
+  background: rgba(255, 255, 255, 0.08);
+  color: #F5E4C4;
   opacity: 1 !important;
 }
 
 .tab__close:active {
-  transform: scale(0.9) rotate(90deg);
+  background: rgba(224, 108, 117, 0.20);
+  color: #fca5a5;
 }
 
-/* ─── New Tab button ──────────────────────────────────────────────── */
+/* ─── New Tab Button: Understated with Comfortable Click Target ────── */
 .tab-new {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 28px;
   height: 28px;
-  border-radius: var(--radius-md);
-  border: none;
+  border-radius: 8px;
+  border: 1px solid transparent;
   background: transparent;
-  color: var(--color-text-secondary);
+  color: #8A99B1;
   cursor: pointer;
   flex-shrink: 0;
-  transition: background var(--duration-fast) var(--ease-emil-out),
-              color var(--duration-fast) var(--ease-emil-out),
+  margin-left: 2px;
+  outline: none;
+  transition: background 150ms var(--ease-emil-out),
+              border-color 150ms var(--ease-emil-out),
+              color 150ms var(--ease-emil-out),
               transform 100ms var(--ease-emil-out);
 }
 
 .tab-new:hover {
-  background: rgba(218, 98, 125, 0.22);
-  color: var(--kage-peach);
-  transform: rotate(90deg) scale(1.1);
+  background: rgba(138, 153, 177, 0.08);
+  border-color: rgba(138, 153, 177, 0.12);
+  color: var(--arbelune-cream, #F5E4C4);
 }
 
 .tab-new:active {
-  transform: scale(0.92) rotate(90deg);
+  transform: scale(0.95);
+}
+
+.tab-new:focus-visible {
+  outline: 2px solid rgba(199, 137, 151, 0.50);
+  outline-offset: 2px;
+}
+
+/* ─── Reduced Motion ───────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .tab,
+  .tab-new,
+  .tab__close {
+    transition: none !important;
+  }
+  .tab:active,
+  .tab-new:active {
+    transform: none !important;
+  }
 }

@@ -1,5 +1,6 @@
 /**
  * SmartTooltip Styles — Emil Kowalski origin-aware micro-tooltips
+ * Unified Arbelune Design System (Obsidian + Elevated Charcoal + Soft Rose)
  */
 .smart-tooltip-wrap {
   position: relative;
@@ -7,132 +8,129 @@
 }
 
 .smart-tooltip {
-  position: absolute;
-  z-index: var(--z-toast, 70);
+  position: fixed;
+  z-index: 9999;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 4px 8px;
-  background: rgba(30, 8, 18, 0.94);
-  color: var(--color-text-primary, #FCEDE0);
-  border: 1px solid rgba(218, 98, 125, 0.35);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5), 0 0 8px rgba(218, 98, 125, 0.2);
-  border-radius: var(--radius-sm, 4px);
+  background: rgba(18, 20, 26, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  color: var(--color-text-primary, #F5E4C4);
+  border: 1px solid rgba(199, 137, 151, 0.30);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.65), 
+              0 0 1px rgba(245, 228, 196, 0.15),
+              inset 0 1px 0 rgba(245, 228, 196, 0.08);
+  border-radius: var(--radius-sm, 6px);
   font-family: var(--font-chrome, "Inter", sans-serif);
   font-size: 11px;
   font-weight: 500;
   line-height: 1.2;
   white-space: nowrap;
   pointer-events: none;
+  user-select: none;
   transform-origin: var(--tooltip-origin, center bottom);
-  
-  /* Emil Kowalski rule: Never animate from scale(0). Start from scale(0.95) with opacity */
-  animation: tooltip-in 140ms var(--ease-emil-out, cubic-bezier(0.23, 1, 0.32, 1)) forwards;
+  animation-duration: 140ms;
+  animation-timing-function: var(--ease-emil-out, cubic-bezier(0.23, 1, 0.32, 1));
+  animation-fill-mode: forwards;
+}
+
+.smart-tooltip__label {
+  display: inline-block;
+  color: var(--color-text-primary, #F5E4C4);
+}
+
+.smart-tooltip__shortcut {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 16px;
+  padding: 0 4px;
+  font-family: var(--font-mono, monospace);
+  font-size: 9.5px;
+  font-weight: 600;
+  color: var(--arbelune-rose, #C78997);
+  background: rgba(245, 228, 196, 0.07);
+  border: 1px solid rgba(245, 228, 196, 0.12);
+  border-radius: 3px;
+  letter-spacing: 0.02em;
 }
 
 /* Emil Kowalski rule: skip animation on subsequent adjacent tooltips */
 .smart-tooltip--instant {
   animation: none !important;
   opacity: 1 !important;
-  transform: none !important;
 }
 
-/* Positions */
+/* Positions & Directional Entry Keyframes */
 .smart-tooltip--top {
-  bottom: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%) scale(0.95);
+  transform: translate(-50%, -100%);
+  animation-name: smart-tooltip-in-top;
 }
 
 .smart-tooltip--bottom {
-  top: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%) scale(0.95);
+  transform: translate(-50%, 0);
+  animation-name: smart-tooltip-in-bottom;
 }
 
 .smart-tooltip--left {
-  right: calc(100% + 6px);
-  top: 50%;
-  transform: translateY(-50%) scale(0.95);
+  transform: translate(-100%, -50%);
+  animation-name: smart-tooltip-in-left;
 }
 
 .smart-tooltip--right {
-  left: calc(100% + 6px);
-  top: 50%;
-  transform: translateY(-50%) scale(0.95);
+  transform: translateY(-50%);
+  animation-name: smart-tooltip-in-right;
 }
 
-@keyframes tooltip-in {
+@keyframes smart-tooltip-in-top {
   from {
     opacity: 0;
-    transform: scale(0.95);
+    transform: translate(-50%, -100%) translateY(3px) scale(0.96);
   }
   to {
     opacity: 1;
-    transform: scale(1);
+    transform: translate(-50%, -100%) translateY(0) scale(1);
   }
 }
 
-.smart-tooltip--top {
-  animation-name: tooltip-in-top;
-}
-
-.smart-tooltip--bottom {
-  animation-name: tooltip-in-bottom;
-}
-
-.smart-tooltip--left {
-  animation-name: tooltip-in-left;
-}
-
-.smart-tooltip--right {
-  animation-name: tooltip-in-right;
-}
-
-@keyframes tooltip-in-top {
+@keyframes smart-tooltip-in-bottom {
   from {
     opacity: 0;
-    transform: translateX(-50%) scale(0.95) translateY(2px);
+    transform: translate(-50%, 0) translateY(-3px) scale(0.96);
   }
   to {
     opacity: 1;
-    transform: translateX(-50%) scale(1) translateY(0);
+    transform: translate(-50%, 0) translateY(0) scale(1);
   }
 }
 
-@keyframes tooltip-in-bottom {
+@keyframes smart-tooltip-in-left {
   from {
     opacity: 0;
-    transform: translateX(-50%) scale(0.95) translateY(-2px);
+    transform: translate(-100%, -50%) translateX(3px) scale(0.96);
   }
   to {
     opacity: 1;
-    transform: translateX(-50%) scale(1) translateY(0);
+    transform: translate(-100%, -50%) translateX(0) scale(1);
   }
 }
 
-@keyframes tooltip-in-left {
+@keyframes smart-tooltip-in-right {
   from {
     opacity: 0;
-    transform: translateY(-50%) scale(0.95) translateX(2px);
+    transform: translateY(-50%) translateX(-3px) scale(0.96);
   }
   to {
     opacity: 1;
-    transform: translateY(-50%) scale(1) translateX(0);
-  }
-}
-
-@keyframes tooltip-in-right {
-  from {
-    opacity: 0;
-    transform: translateY(-50%) scale(0.95) translateX(-2px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(-50%) scale(1) translateX(0);
+    transform: translateY(-50%) translateX(0) scale(1);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .smart-tooltip {
-    animation: none;
-    opacity: 1;
+    animation: none !important;
+    opacity: 1 !important;
   }
 }

@@ -3,10 +3,10 @@
   top: 42px;
   right: 60px;
   width: 320px;
-  background: linear-gradient(135deg, rgba(38, 10, 24, 0.96) 0%, rgba(20, 5, 13, 0.98) 100%);
-  border: 1px solid rgba(249, 219, 189, 0.22);
+  background: rgba(18, 20, 26, 0.96);
+  border: 1px solid var(--color-border-default);
   border-radius: 12px;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65), 0 0 20px rgba(218, 98, 125, 0.2);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65), 0 0 16px rgba(199, 137, 151, 0.12);
   backdrop-filter: blur(28px);
   -webkit-backdrop-filter: blur(28px);
   z-index: 100;
@@ -35,7 +35,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 8px 12px;
-  background: rgba(38, 10, 24, 0.8);
+  background: rgba(11, 12, 16, 0.8);
   border-bottom: 1px solid var(--color-border-subtle);
 }
 
@@ -45,7 +45,7 @@
   gap: 6px;
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--kage-peach);
+  color: var(--color-text-primary);
 }
 
 .dl-close-btn {
@@ -84,22 +84,22 @@
 }
 
 .dl-item:hover {
-  background: rgba(218, 98, 125, 0.1);
+  background: rgba(199, 137, 151, 0.10);
 }
 
 .dl-item__icon {
   width: 28px;
   height: 28px;
   border-radius: var(--radius-md);
-  background: rgba(218, 98, 125, 0.15);
+  background: rgba(199, 137, 151, 0.15);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 
-.dl-icon--done { color: #34d399; }
-.dl-icon--active { color: var(--kage-peach); }
+.dl-icon--done { color: #78C697; }
+.dl-icon--active { color: var(--color-accent-hover); }
 
 .dl-item__info {
   flex: 1;
@@ -112,7 +112,7 @@
 .dl-item__name {
   font-size: 0.74rem;
   font-weight: 600;
-  color: #ffffff;
+  color: var(--color-text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -128,7 +128,7 @@
 
 .dl-progress-bar {
   height: 3px;
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(245, 228, 196, 0.10);
   border-radius: var(--radius-full);
   margin-top: 4px;
   overflow: hidden;
@@ -136,7 +136,7 @@
 
 .dl-progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--kage-peach) 0%, var(--kage-rose) 100%);
+  background: linear-gradient(90deg, var(--color-accent-hover) 0%, var(--color-accent-primary) 100%);
   transition: width 200ms ease;
 }
 
@@ -152,5 +152,5 @@
 
 .dl-folder-btn:hover {
   color: #ffffff;
-  background: rgba(218, 98, 125, 0.2);
+  background: rgba(199, 137, 151, 0.18);
 }

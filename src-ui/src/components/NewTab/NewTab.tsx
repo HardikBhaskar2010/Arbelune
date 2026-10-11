@@ -14,37 +14,34 @@ import {
   CloudSnow,
   CloudLightning,
 } from "lucide-react";
+import { SmartTooltip } from "../ui";
 import { fetchOpenMeteoWeather } from "../../services/weatherService";
 import type { WeatherData } from "../../services/weatherService";
 
-// Crisp SVG Brand Icons
-const GithubIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-    <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
-  </svg>
-);
-
-const VercelIcon = () => (
-  <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M12 1L24 22H0L12 1z"/>
-  </svg>
-);
-
-const NotionIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M4.459 4.208c.746.606 1.026.56 2.428.466l11.459-.7c.373 0 .466-.186.373-.466L17.799 2.25c-.28-.373-.746-.56-1.306-.56L3.993 2.81c-.466 0-.653.28-.466.56l.932.838zm.746 3.078c-.466 0-.653.28-.653.653v12.404c0 .466.28.746.746.746l13.71.746c.466 0 .746-.28.746-.746V7.939c0-.466-.28-.746-.746-.746L5.205 7.286zm3.358 2.705h2.238l3.731 5.69v-5.69h2.052v7.462h-2.052l-3.918-5.97v5.97H8.563V9.991z"/>
-  </svg>
-);
-
+// Crisp SVG Brand Icons matching Target Workstation Reference
 const YoutubeIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="#FF0000">
     <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
   </svg>
 );
 
-const XIcon = () => (
-  <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+const GithubIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="#FFFFFF">
+    <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+  </svg>
+);
+
+const DocsIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+    <path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" fill="#4285F4"/>
+    <path d="M14 2V8H20L14 2Z" fill="#A1C2FA"/>
+    <path d="M16 13H8V11.5H16V13ZM16 17H8V15.5H16V17ZM12 9H8V7.5H12V9Z" fill="white"/>
+  </svg>
+);
+
+const NotionIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="#FFFFFF">
+    <path d="M4.459 4.208c.746.606 1.026.56 2.428.466l11.459-.7c.373 0 .466-.186.373-.466L17.799 2.25c-.28-.373-.746-.56-1.306-.56L3.993 2.81c-.466 0-.653.28-.466.56l.932.838zm.746 3.078c-.466 0-.653.28-.653.653v12.404c0 .466.28.746.746.746l13.71.746c.466 0 .746-.28.746-.746V7.939c0-.466-.28-.746-.746-.746L5.205 7.286zm3.358 2.705h2.238l3.731 5.69v-5.69h2.052v7.462h-2.052l-3.918-5.97v5.97H8.563V9.991z"/>
   </svg>
 );
 
@@ -58,6 +55,13 @@ interface QuickLinkItem {
 
 const QUICK_LINKS: QuickLinkItem[] = [
   {
+    id: "youtube",
+    label: "YouTube",
+    category: "Media",
+    url: "https://youtube.com",
+    icon: <YoutubeIcon />,
+  },
+  {
     id: "github",
     label: "GitHub",
     category: "Repository",
@@ -65,11 +69,11 @@ const QUICK_LINKS: QuickLinkItem[] = [
     icon: <GithubIcon />,
   },
   {
-    id: "vercel",
-    label: "Vercel",
-    category: "Deployments",
-    url: "https://vercel.com",
-    icon: <VercelIcon />,
+    id: "docs",
+    label: "Docs",
+    category: "Reference",
+    url: "https://docs.google.com",
+    icon: <DocsIcon />,
   },
   {
     id: "notion",
@@ -79,25 +83,11 @@ const QUICK_LINKS: QuickLinkItem[] = [
     icon: <NotionIcon />,
   },
   {
-    id: "youtube",
-    label: "YouTube",
-    category: "Media",
-    url: "https://youtube.com",
-    icon: <YoutubeIcon />,
-  },
-  {
-    id: "x",
-    label: "X",
-    category: "Feed",
-    url: "https://x.com",
-    icon: <XIcon />,
-  },
-  {
     id: "add",
     label: "Add",
     category: "Shortcut",
     url: "#add",
-    icon: <Plus size={20} strokeWidth={2.2} />,
+    icon: <Plus size={20} strokeWidth={2} />,
   },
 ];
 
@@ -134,9 +124,14 @@ const renderWeatherIcon = (code: number, isDay: boolean) => {
 interface NewTabProps {
   onNavigate: (url: string) => void;
   onToggleAi?: () => void;
+  onOpenCommandPalette?: () => void;
 }
 
-export const NewTab: React.FC<NewTabProps> = ({ onNavigate, onToggleAi }) => {
+export const NewTab: React.FC<NewTabProps> = ({
+  onNavigate,
+  onToggleAi,
+  onOpenCommandPalette,
+}) => {
   const [query, setQuery] = useState("");
   const [currentTime, setCurrentTime] = useState(new Date());
   const [weather, setWeather] = useState<WeatherData>({
@@ -187,6 +182,13 @@ export const NewTab: React.FC<NewTabProps> = ({ onNavigate, onToggleAi }) => {
     year: "numeric",
   });
 
+  const getGreeting = (date: Date) => {
+    const hours = date.getHours();
+    if (hours < 12) return "Good morning";
+    if (hours < 18) return "Good afternoon";
+    return "Good evening";
+  };
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (!query.trim()) return;
@@ -210,7 +212,7 @@ export const NewTab: React.FC<NewTabProps> = ({ onNavigate, onToggleAi }) => {
         tabIndex={-1}
       />
 
-      {/* ── Left Vertical Philosophy Pillar ───────────────────────── */}
+      {/* ── Left Vertical Philosophy Pillar (Subtle watermark) ────── */}
       <aside className="new-tab__pillar" aria-label="Brand Philosophy">
         <div className="new-tab__pillar-jp" lang="ja">
           つくる、もっと自由に。
@@ -221,7 +223,7 @@ export const NewTab: React.FC<NewTabProps> = ({ onNavigate, onToggleAi }) => {
         </div>
       </aside>
 
-      {/* ── Top-Right Status Widget (No emojis) ───────────────────── */}
+      {/* ── Top-Right Status Widget ───────────────────────────────── */}
       <div className="new-tab__top-right" aria-live="off">
         <div className="new-tab__weather" title={`${weather.city} · ${weather.condition}`}>
           {renderWeatherIcon(weather.weatherCode, weather.isDay)}
@@ -241,11 +243,14 @@ export const NewTab: React.FC<NewTabProps> = ({ onNavigate, onToggleAi }) => {
 
       {/* ── Center Stage ─────────────────────────────────────────── */}
       <div className="new-tab__center">
-        {/* Main Logo Only — No center text replacement */}
-        <div className="new-tab__hero">
-          <div className="new-tab__logo-wrap">
-            <img src="/arbelune-logo.png" alt="Arbelune" className="new-tab__logo-img" />
-          </div>
+        {/* Main Greeting & Supporting Message */}
+        <div className="new-tab__greeting-block">
+          <h1 className="new-tab__greeting-title">
+            {getGreeting(currentTime)}<span className="new-tab__greeting-dot">.</span>
+          </h1>
+          <p className="new-tab__greeting-subtitle">
+            Let’s browse with purpose.
+          </p>
         </div>
 
         {/* Liquid Glass Search Capsule */}
@@ -268,36 +273,46 @@ export const NewTab: React.FC<NewTabProps> = ({ onNavigate, onToggleAi }) => {
               className="new-tab__search-input"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search the web or ask Arbelune AI…"
+              placeholder="Ask Arbelune or search..."
               aria-label="Search or enter a URL"
-              autoFocus
               spellCheck={false}
               autoComplete="off"
             />
             <div className="new-tab__search-actions">
-              <button
-                type="button"
-                className="new-tab__search-action-btn new-tab__search-ai-btn"
-                onClick={onToggleAi}
-                aria-label="Ask Arbelune AI"
-                title="Ask Arbelune AI"
-              >
-                <Sparkles size={16} strokeWidth={2} />
-              </button>
-              <span className="new-tab__search-divider" />
-              <button
-                type="button"
-                className="new-tab__search-action-btn"
-                aria-label="Voice Search"
-                title="Voice Search"
-              >
-                <Mic size={16} strokeWidth={2} />
-              </button>
+              <SmartTooltip content="Command Search" shortcut="Ctrl+K" position="top">
+                <button
+                  type="button"
+                  className="new-tab__kbd-shortcut"
+                  onClick={onOpenCommandPalette}
+                  aria-label="Open Command Palette (Ctrl+K)"
+                >
+                  <span className="new-tab__kbd-symbol">⌘</span>K
+                </button>
+              </SmartTooltip>
+              <SmartTooltip content="Ask Arbelune AI" shortcut="Ctrl+Shift+A" position="top">
+                <button
+                  type="button"
+                  className="new-tab__search-action-btn new-tab__search-ai-btn"
+                  onClick={onToggleAi}
+                  aria-label="Ask Arbelune AI"
+                >
+                  <Sparkles size={16} strokeWidth={2} />
+                </button>
+              </SmartTooltip>
+              <SmartTooltip content="Voice Search" position="top">
+                <button
+                  type="button"
+                  className="new-tab__search-action-btn"
+                  aria-label="Voice Search"
+                >
+                  <Mic size={15} strokeWidth={2} />
+                </button>
+              </SmartTooltip>
             </div>
           </div>
         </form>
 
-        {/* Quick Launch Cards (6 cards with visible crisp brand icons) */}
+        {/* Quick Launch Cards (Consistent Near-Black Elevated Tiles) */}
         <div className="new-tab__quick-grid" role="list" aria-label="Quick launch bookmarks">
           {QUICK_LINKS.map((link) => (
             <button
@@ -306,17 +321,14 @@ export const NewTab: React.FC<NewTabProps> = ({ onNavigate, onToggleAi }) => {
               onClick={() => {
                 if (link.id !== "add") onNavigate(link.url);
               }}
-              aria-label={`Open ${link.label} (${link.category})`}
+              aria-label={`Open ${link.label}`}
               id={`quick-link-${link.id}`}
               role="listitem"
             >
               <div className="new-tab__quick-icon-badge">
                 {link.icon}
               </div>
-              <div className="new-tab__quick-info">
-                <span className="new-tab__quick-title">{link.label}</span>
-                <span className="new-tab__quick-category">{link.category}</span>
-              </div>
+              <span className="new-tab__quick-title">{link.label}</span>
             </button>
           ))}
         </div>

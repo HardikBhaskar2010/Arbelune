@@ -1,6 +1,7 @@
 import React from "react";
 import "./TabStrip.css";
 import { Home, Plus, X } from "lucide-react";
+import { SmartTooltip } from "../ui";
 
 export interface Tab {
   id: string;
@@ -85,15 +86,16 @@ export const TabStrip: React.FC<TabStripProps> = ({
           </button>
         </div>
       ))}
-      <button
-        className="tab-new"
-        onClick={onNewTab}
-        aria-label="Open new tab"
-        id="btn-new-tab"
-        title="New Tab"
-      >
-        <Plus size={15} strokeWidth={2.2} />
-      </button>
+      <SmartTooltip content="New tab" shortcut="Ctrl+T" position="bottom">
+        <button
+          className="tab-new"
+          onClick={onNewTab}
+          aria-label="Open new tab"
+          id="btn-new-tab"
+        >
+          <Plus size={14} strokeWidth={2.2} />
+        </button>
+      </SmartTooltip>
     </div>
   );
 };

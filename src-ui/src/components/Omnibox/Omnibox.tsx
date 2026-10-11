@@ -12,6 +12,7 @@ import {
   Blocks,
   Palette,
 } from "lucide-react";
+import { SmartTooltip } from "../ui";
 
 interface OmniboxProps {
   url: string;
@@ -77,40 +78,44 @@ export const Omnibox: React.FC<OmniboxProps> = ({
     <div className="omnibox" role="navigation" aria-label="Browser navigation bar">
       {/* ── Left Navigation Buttons ──────────────────────────────── */}
       <div className="omnibox__nav-btns">
-        <button
-          className="omnibox__nav-btn"
-          onClick={onBack}
-          disabled={!canGoBack}
-          aria-label="Go back"
-          title="Back"
-        >
-          <ArrowLeft size={16} strokeWidth={2} className="omnibox__icon-hover-left" />
-        </button>
-        <button
-          className="omnibox__nav-btn"
-          onClick={onForward}
-          disabled={!canGoForward}
-          aria-label="Go forward"
-          title="Forward"
-        >
-          <ArrowRight size={16} strokeWidth={2} className="omnibox__icon-hover-right" />
-        </button>
-        <button
-          className={`omnibox__nav-btn ${isRefreshing ? "omnibox__nav-btn--refreshing" : ""}`}
-          onClick={handleRefreshClick}
-          aria-label="Refresh page"
-          title="Refresh"
-        >
-          <RotateCw size={15} strokeWidth={2} className="omnibox__icon-hover-rotate" />
-        </button>
-        <button
-          className="omnibox__nav-btn"
-          onClick={() => onNavigate("")}
-          aria-label="New Tab / Home"
-          title="Home"
-        >
-          <Home size={16} strokeWidth={2} />
-        </button>
+        <SmartTooltip content="Back" shortcut="Alt+←" position="bottom">
+          <button
+            className="omnibox__nav-btn"
+            onClick={onBack}
+            disabled={!canGoBack}
+            aria-label="Go back"
+          >
+            <ArrowLeft size={16} strokeWidth={2} className="omnibox__icon-hover-left" />
+          </button>
+        </SmartTooltip>
+        <SmartTooltip content="Forward" shortcut="Alt+→" position="bottom">
+          <button
+            className="omnibox__nav-btn"
+            onClick={onForward}
+            disabled={!canGoForward}
+            aria-label="Go forward"
+          >
+            <ArrowRight size={16} strokeWidth={2} className="omnibox__icon-hover-right" />
+          </button>
+        </SmartTooltip>
+        <SmartTooltip content="Reload page" shortcut="Ctrl+R" position="bottom">
+          <button
+            className={`omnibox__nav-btn ${isRefreshing ? "omnibox__nav-btn--refreshing" : ""}`}
+            onClick={handleRefreshClick}
+            aria-label="Refresh page"
+          >
+            <RotateCw size={15} strokeWidth={2} className="omnibox__icon-hover-rotate" />
+          </button>
+        </SmartTooltip>
+        <SmartTooltip content="Home / New Tab" shortcut="Ctrl+H" position="bottom">
+          <button
+            className="omnibox__nav-btn"
+            onClick={() => onNavigate("")}
+            aria-label="New Tab / Home"
+          >
+            <Home size={16} strokeWidth={2} />
+          </button>
+        </SmartTooltip>
       </div>
 
       {/* ── Center Omnibox Capsule ───────────────────────────────── */}
@@ -133,61 +138,75 @@ export const Omnibox: React.FC<OmniboxProps> = ({
           spellCheck={false}
           autoComplete="off"
         />
-        <button
-          className="omnibox__ai-btn"
-          onClick={onToggleAi}
-          aria-label="Ask Arbelune AI"
-          title="Ask Arbelune AI"
-          type="button"
-        >
-          <Sparkles size={14} strokeWidth={2} className="omnibox__sparkle-icon" />
-        </button>
+        <SmartTooltip content="Ask Arbelune AI" shortcut="Ctrl+Shift+A" position="bottom">
+          <button
+            className="omnibox__ai-btn"
+            onClick={onToggleAi}
+            aria-label="Ask Arbelune AI"
+            type="button"
+          >
+            <Sparkles size={14} strokeWidth={2} className="omnibox__sparkle-icon" />
+          </button>
+        </SmartTooltip>
       </div>
 
       {/* ── Right Utility Actions + Profile Avatar ────────────────── */}
       <div className="omnibox__actions-right">
         {onToggleTheme && (
+          <SmartTooltip
+            content={isThemeActive ? "Arbelune Theme: Active" : "Arbelune Theme: Off"}
+            position="bottom"
+          >
+            <button
+              className={`omnibox__action-btn ${isThemeActive ? "omnibox__action-btn--active" : ""}`}
+              onClick={onToggleTheme}
+              aria-label={isThemeActive ? "Arbelune Theme: Active (Click to disable on this site)" : "Arbelune Theme: Disabled (Click to enable)"}
+              type="button"
+            >
+              <Palette size={16} strokeWidth={2} />
+            </button>
+          </SmartTooltip>
+        )}
+        <SmartTooltip
+          content={isStarred ? "Remove bookmark" : "Bookmark page"}
+          shortcut="Ctrl+D"
+          position="bottom"
+        >
           <button
-            className={`omnibox__action-btn ${isThemeActive ? "omnibox__action-btn--active" : ""}`}
-            onClick={onToggleTheme}
-            aria-label={isThemeActive ? "Arbelune Theme: Active (Click to disable on this site)" : "Arbelune Theme: Disabled (Click to enable)"}
-            title={isThemeActive ? "Arbelune Theme: Active (Click to disable on this site)" : "Arbelune Theme: Disabled (Click to enable)"}
+            className={`omnibox__action-btn ${isStarred ? "omnibox__action-btn--active" : ""}`}
+            onClick={handleStarClick}
+            aria-label="Bookmark page"
             type="button"
           >
-            <Palette size={16} strokeWidth={2} />
+            <Star size={16} strokeWidth={2} fill={isStarred ? "currentColor" : "none"} />
           </button>
-        )}
-        <button
-          className={`omnibox__action-btn ${isStarred ? "omnibox__action-btn--active" : ""}`}
-          onClick={handleStarClick}
-          aria-label="Bookmark page"
-          title="Bookmark"
-          type="button"
-        >
-          <Star size={16} strokeWidth={2} fill={isStarred ? "currentColor" : "none"} />
-        </button>
-        <button
-          className="omnibox__action-btn"
-          onClick={onToggleDownloads}
-          aria-label="Downloads"
-          title="Downloads"
-          type="button"
-        >
-          <Download size={16} strokeWidth={2} />
-        </button>
-        <button
-          className="omnibox__action-btn"
-          onClick={onToggleExtensions}
-          aria-label="Extensions"
-          title="Extensions"
-          type="button"
-        >
-          <Blocks size={16} strokeWidth={2} />
-        </button>
-        <div className="omnibox__profile-wrap" title="Arbelune Profile">
-          <img src="/arbelune-avatar.png" alt="Profile" className="omnibox__profile-avatar" />
-          <span className="omnibox__profile-dot" />
-        </div>
+        </SmartTooltip>
+        <SmartTooltip content="Downloads" shortcut="Ctrl+J" position="bottom">
+          <button
+            className="omnibox__action-btn"
+            onClick={onToggleDownloads}
+            aria-label="Downloads"
+            type="button"
+          >
+            <Download size={16} strokeWidth={2} />
+          </button>
+        </SmartTooltip>
+        <SmartTooltip content="Extensions" position="bottom">
+          <button
+            className="omnibox__action-btn"
+            onClick={onToggleExtensions}
+            aria-label="Extensions"
+            type="button"
+          >
+            <Blocks size={16} strokeWidth={2} />
+          </button>
+        </SmartTooltip>
+        <SmartTooltip content="Active Profile" position="bottom">
+          <div className="omnibox__profile-wrap">
+            <img src="/arbelune-avatar.png" alt="Profile" className="omnibox__profile-avatar" />
+            <span className="omnibox__profile-dot" />
+          </div>
+        </SmartTooltip>
       </div>
     </div>
   );

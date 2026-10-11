@@ -26,6 +26,7 @@ import {
   SpotlightCard,
   BorderBeam,
   ShimmerButton,
+  SmartTooltip,
 } from "../ui";
 import { aiProviderRegistry } from "../../services/aiProviderDiscovery";
 import { isTauriEnvironment } from "../../adapters/BrowserAdapter";
@@ -569,20 +570,30 @@ export const AISidebar: React.FC<AISidebarProps> = ({
           />
           <div className="ai-input-capsule__toolbar">
             <div className="ai-input-capsule__tools-left">
-              <button type="button" className="ai-tool-btn" title="Attach file or screenshot" disabled={taskState === "STOPPED"}>
-                <Paperclip size={15} strokeWidth={1.8} />
-              </button>
-
-              <div className="ai-model-selector-wrap">
+              <SmartTooltip content="Attach file or screenshot" position="top">
                 <button
                   type="button"
-                  className="ai-model-btn"
-                  onClick={() => setShowModelPicker((p) => !p)}
+                  className="ai-tool-btn"
+                  aria-label="Attach file or screenshot"
                   disabled={taskState === "STOPPED"}
                 >
-                  <span>{model}</span>
-                  <ChevronDown size={12} strokeWidth={2} />
+                  <Paperclip size={15} strokeWidth={1.8} />
                 </button>
+              </SmartTooltip>
+
+              <div className="ai-model-selector-wrap">
+                <SmartTooltip content="Change agent model" position="top">
+                  <button
+                    type="button"
+                    className="ai-model-btn"
+                    onClick={() => setShowModelPicker((p) => !p)}
+                    disabled={taskState === "STOPPED"}
+                    aria-label="Change agent model"
+                  >
+                    <span>{model}</span>
+                    <ChevronDown size={12} strokeWidth={2} />
+                  </button>
+                </SmartTooltip>
                 {showModelPicker && (
                   <div className="ai-model-dropdown">
                     {aiProviderRegistry.getAllModels().map((m) => (

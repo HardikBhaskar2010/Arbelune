@@ -1,0 +1,349 @@
+/**
+ * CommandPalette Styles — Vercel/Raycast inspired Command Search
+ * Canonical Arbelune Design System (Obsidian + Elevated Charcoal + Soft Rose)
+ */
+
+.command-palette-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 14vh;
+  background: rgba(11, 12, 16, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  animation: cp-backdrop-fade 120ms var(--ease-emil-out, cubic-bezier(0.23, 1, 0.32, 1)) forwards;
+}
+
+.command-palette {
+  position: relative;
+  width: 580px;
+  max-width: 90vw;
+  max-height: 480px;
+  display: flex;
+  flex-direction: column;
+  background: rgba(18, 20, 26, 0.96);
+  border: 1px solid rgba(199, 137, 151, 0.28);
+  border-radius: var(--radius-xl, 16px);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.85),
+              0 0 1px rgba(245, 228, 196, 0.18),
+              inset 0 1px 0 rgba(245, 228, 196, 0.10);
+  overflow: hidden;
+  user-select: none;
+  animation: cp-panel-enter 130ms var(--ease-emil-out, cubic-bezier(0.23, 1, 0.32, 1)) forwards;
+}
+
+/* ─── Header Search Input ────────────────────────────────────────── */
+.command-palette__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 52px;
+  padding: 0 16px;
+  border-bottom: 1px solid rgba(245, 228, 196, 0.08);
+  background: rgba(25, 27, 35, 0.4);
+}
+
+.command-palette__search-icon {
+  color: var(--arbelune-rose, #C78997);
+  flex-shrink: 0;
+  opacity: 0.9;
+}
+
+.command-palette__input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: var(--font-chrome, "Inter", sans-serif);
+  font-size: 14px;
+  color: var(--color-text-primary, #F5E4C4);
+  caret-color: var(--arbelune-rose, #C78997);
+}
+
+.command-palette__input::placeholder {
+  color: rgba(138, 153, 177, 0.65);
+}
+
+.command-palette__esc-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 20px;
+  padding: 0 6px;
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-text-secondary, #8A99B1);
+  background: rgba(245, 228, 196, 0.05);
+  border: 1px solid rgba(245, 228, 196, 0.10);
+  border-radius: 4px;
+  letter-spacing: 0.02em;
+}
+
+.command-palette__clear-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  background: rgba(245, 228, 196, 0.06);
+  border: 1px solid rgba(245, 228, 196, 0.10);
+  color: var(--color-text-secondary, #8A99B1);
+  cursor: pointer;
+  transition: color 120ms var(--ease-emil-out), background 120ms var(--ease-emil-out);
+}
+
+.command-palette__clear-btn:hover {
+  color: var(--color-text-primary, #F5E4C4);
+  background: rgba(245, 228, 196, 0.12);
+}
+
+/* ─── Body List of Commands ──────────────────────────────────────── */
+.command-palette__body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 360px;
+}
+
+.command-palette__body::-webkit-scrollbar {
+  width: 5px;
+}
+
+.command-palette__body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.command-palette__body::-webkit-scrollbar-thumb {
+  background: rgba(138, 153, 177, 0.25);
+  border-radius: 4px;
+}
+
+/* Category header */
+.command-palette__group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 6px;
+}
+
+.command-palette__group-header {
+  font-family: var(--font-chrome, sans-serif);
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(138, 153, 177, 0.7);
+  padding: 6px 10px 4px 10px;
+}
+
+/* Command item */
+.command-palette__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border-radius: var(--radius-md, 8px);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--color-text-secondary, #8A99B1);
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: background 100ms var(--ease-emil-out),
+              border-color 100ms var(--ease-emil-out),
+              color 100ms var(--ease-emil-out);
+}
+
+.command-palette__item--selected {
+  background: rgba(199, 137, 151, 0.16);
+  border-color: rgba(199, 137, 151, 0.32);
+  color: var(--color-text-primary, #F5E4C4);
+}
+
+.command-palette__item--disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.command-palette__item-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm, 6px);
+  background: rgba(25, 27, 35, 0.7);
+  border: 1px solid rgba(245, 228, 196, 0.07);
+  color: var(--arbelune-rose, #C78997);
+  flex-shrink: 0;
+  transition: transform 120ms var(--ease-emil-out);
+}
+
+.command-palette__item--selected .command-palette__item-icon {
+  color: #F5E4C4;
+  border-color: rgba(199, 137, 151, 0.35);
+  transform: scale(1.05);
+}
+
+.command-palette__item-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.command-palette__item-title {
+  font-family: var(--font-chrome, sans-serif);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-primary, #F5E4C4);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.command-palette__item-subtitle {
+  font-family: var(--font-chrome, sans-serif);
+  font-size: 11px;
+  color: rgba(138, 153, 177, 0.75);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.command-palette__item-shortcut {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 18px;
+  padding: 0 5px;
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--arbelune-rose, #C78997);
+  background: rgba(245, 228, 196, 0.05);
+  border: 1px solid rgba(245, 228, 196, 0.12);
+  border-radius: 4px;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+
+.command-palette__item-enter-icon {
+  color: var(--arbelune-rose, #C78997);
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+
+/* Empty state */
+.command-palette__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 36px 20px;
+  text-align: center;
+  gap: 6px;
+}
+
+.command-palette__empty-title {
+  font-family: var(--font-chrome, sans-serif);
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--color-text-primary, #F5E4C4);
+}
+
+.command-palette__empty-desc {
+  font-family: var(--font-chrome, sans-serif);
+  font-size: 11.5px;
+  color: rgba(138, 153, 177, 0.7);
+  max-width: 320px;
+}
+
+/* ─── Footer Bar ─────────────────────────────────────────────────── */
+.command-palette__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 36px;
+  padding: 0 14px;
+  border-top: 1px solid rgba(245, 228, 196, 0.08);
+  background: rgba(14, 16, 22, 0.92);
+}
+
+.command-palette__hints {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.command-palette__hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-chrome, sans-serif);
+  font-size: 10.5px;
+  color: rgba(138, 153, 177, 0.7);
+}
+
+.command-palette__key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 16px;
+  min-width: 16px;
+  padding: 0 3px;
+  font-family: var(--font-mono, monospace);
+  font-size: 9.5px;
+  font-weight: 600;
+  color: var(--color-text-primary, #F5E4C4);
+  background: rgba(245, 228, 196, 0.08);
+  border: 1px solid rgba(245, 228, 196, 0.12);
+  border-radius: 3px;
+}
+
+.command-palette__brand {
+  font-family: var(--font-brand, sans-serif);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--arbelune-rose, #C78997);
+  opacity: 0.85;
+}
+
+/* ─── Animations (Emil Kowalski standard: swift entry, no scale(0)) ─ */
+@keyframes cp-backdrop-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes cp-panel-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .command-palette-backdrop,
+  .command-palette {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

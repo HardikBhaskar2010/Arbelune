@@ -1,198 +1,345 @@
+/* ─── Arbelune Refined Icon Sidebar ───────────────────────────────── */
 .icon-sidebar {
   display: flex;
   flex-direction: column;
-  width: var(--sidebar-width, 54px);
-  min-width: var(--sidebar-width, 54px);
+  width: var(--sidebar-width, 210px);
+  min-width: var(--sidebar-width, 210px);
   flex-shrink: 0;
   height: 100%;
-  background: var(--color-surface-1);
+  background: rgba(11, 12, 16, 0.96);
   border-right: 1px solid var(--color-border-subtle);
   z-index: var(--z-sidebar);
   overflow: hidden;
   justify-content: space-between;
+  transition: width 220ms cubic-bezier(0.16, 1, 0.3, 1),
+              min-width 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
 }
 
-.icon-sidebar__top,
-.icon-sidebar__bottom {
+.icon-sidebar--collapsed {
+  width: 58px;
+  min-width: 58px;
+}
+
+.icon-sidebar__top {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: var(--space-2) 0;
-  gap: 3px;
+  align-items: stretch;
+  padding: 10px 8px 6px 8px;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
-/* ─── Individual sidebar item ──────────────────────────────────────── */
+.icon-sidebar--collapsed .icon-sidebar__top {
+  align-items: center;
+  padding: 10px 4px 6px 4px;
+}
+
+/* ─── Brand & Workspace Header (Expanded only) ─────────────────────── */
+.icon-sidebar__brand-header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px 8px 12px 8px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.icon-sidebar__brand-title {
+  font-family: var(--font-chrome);
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--arbelune-cream, #F5E4C4);
+  line-height: 1.1;
+}
+
+.icon-sidebar__brand-subtitle {
+  font-family: var(--font-mono, JetBrains Mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--arbelune-slate-blue, #8A99B1);
+  opacity: 0.7;
+  text-transform: uppercase;
+}
+
+/* ─── Navigation Groups ────────────────────────────────────────────── */
+.icon-sidebar__groups {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sidebar-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-group__label {
+  font-family: var(--font-mono, JetBrains Mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--arbelune-slate-blue, #8A99B1);
+  opacity: 0.75;
+  text-transform: uppercase;
+  padding: 8px 8px 4px 8px;
+  line-height: 1;
+}
+
+.sidebar-group__separator {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.06);
+  margin: 6px 6px;
+}
+
+.sidebar-group__separator--collapsed {
+  width: 24px;
+  margin: 6px auto;
+}
+
+.sidebar-group__items {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* ─── Individual Navigation Row (Recommendation: 38–42px) ──────────── */
 .sidebar-item {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  padding: 3px;
-  gap: 2px;
-  border-radius: var(--radius-md);
+  justify-content: flex-start;
+  width: 100%;
+  height: 40px;
+  padding: 0 10px;
+  gap: 10px;
+  border-radius: 10px;
   border: 1px solid transparent;
   background: transparent;
-  color: var(--color-text-muted);
+  color: #8A99B1;
   cursor: pointer;
   position: relative;
+  outline: none;
   transition: background 160ms var(--ease-emil-out),
               border-color 160ms var(--ease-emil-out),
               color 160ms var(--ease-emil-out),
-              transform 160ms var(--ease-emil-out);
+              transform 120ms var(--ease-emil-out);
 }
 
-/* Normal State: icon + tiny muted label */
+.icon-sidebar--collapsed .sidebar-item {
+  justify-content: center;
+  width: 44px;
+  height: 40px;
+  padding: 0;
+  border-radius: 10px;
+}
+
+/* Icon Container */
 .sidebar-item .sidebar-item__icon {
-  color: var(--color-text-secondary);
-  opacity: 0.75;
-  transition: transform 160ms var(--ease-emil-out), color 160ms var(--ease-emil-out), opacity 160ms var(--ease-emil-out);
-}
-
-.sidebar-item .sidebar-item__label {
-  font-size: 0.58rem;
-  color: var(--color-text-muted);
-  opacity: 0.6;
-  letter-spacing: 0.02em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 40px;
-  line-height: 1;
-  transition: opacity 160ms var(--ease-emil-out), color 160ms var(--ease-emil-out), transform 160ms var(--ease-emil-out);
-}
-
-/* Hover State: expanded label brightness & soft background */
-.sidebar-item:hover:not(.sidebar-item--active) {
-  background: rgba(218, 98, 125, 0.16);
-  border-color: rgba(249, 219, 189, 0.28);
-  color: var(--color-text-primary);
-  transform: translateY(-1px);
-}
-
-.sidebar-item:hover:not(.sidebar-item--active) .sidebar-item__icon {
-  opacity: 1;
-  color: #ffffff;
-  transform: scale(1.12);
-  filter: drop-shadow(0 0 6px rgba(218, 98, 125, 0.4));
-}
-
-.sidebar-item:hover:not(.sidebar-item--active) .sidebar-item__label {
-  opacity: 1;
-  color: var(--kage-peach);
-  font-weight: 600;
-  letter-spacing: 0.04em;
-}
-
-/* Active State: glowing liquid-glass capsule + icon + label */
-.sidebar-item--active {
-  background: linear-gradient(135deg, rgba(218, 98, 125, 0.45) 0%, rgba(165, 56, 96, 0.70) 100%);
-  border: 1px solid rgba(255, 165, 171, 0.45);
-  color: #FFFFFF;
-  box-shadow: 0 4px 18px rgba(218, 98, 125, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.25);
-}
-
-/* Specific glowing AI squircle pill matching Mockup_New Tab Screen.png */
-.sidebar-item--ai.sidebar-item--active {
-  background: linear-gradient(135deg, rgba(218, 98, 125, 0.55) 0%, rgba(165, 56, 96, 0.82) 100%);
-  border: 1px solid rgba(249, 219, 189, 0.55);
-  box-shadow: 0 0 22px rgba(218, 98, 125, 0.6), 0 0 35px rgba(249, 219, 189, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.4);
-}
-
-.sidebar-item--ai.sidebar-item--active .sidebar-item__icon {
-  filter: drop-shadow(0 0 10px rgba(249, 219, 189, 0.85));
-}
-
-.sidebar-item--active .sidebar-item__icon {
-  color: #FFFFFF;
-  opacity: 1;
-  filter: drop-shadow(0 0 8px rgba(249, 219, 189, 0.6));
-}
-
-.sidebar-item--active .sidebar-item__label {
-  color: #FFFFFF;
-  opacity: 1;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-}
-
-.sidebar-item:active {
-  transform: scale(0.93);
-}
-
-.sidebar-item:focus-visible {
-  outline: 2px solid var(--color-accent-primary);
-  outline-offset: 2px;
-}
-
-/* ─── Brand Footer ─────────────────────────────────────────────────── */
-.icon-sidebar__brand {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  padding: var(--space-2) 0 var(--space-1);
-}
-
-.icon-sidebar__brand-logo {
-  width: 36px;
-  height: auto;
-  object-fit: contain;
-  filter: drop-shadow(0 0 6px rgba(218, 98, 125, 0.45));
-  opacity: 0.85;
-  transition: opacity 160ms var(--ease-emil-out), filter 160ms var(--ease-emil-out);
-}
-
-.icon-sidebar__brand-logo:hover {
-  opacity: 1;
-  filter: drop-shadow(0 0 10px rgba(249, 219, 189, 0.65));
-}
-
-.icon-sidebar__brand-version {
-  font-size: 8px;
-  font-family: var(--font-mono);
-  color: var(--color-text-muted);
-}
-
-/* ─── Icon & label ─────────────────────────────────────────────────── */
-.sidebar-item__icon {
+  color: #8A99B1;
   display: flex;
   align-items: center;
   justify-content: center;
   width: 20px;
   height: 20px;
   flex-shrink: 0;
+  position: relative;
+  transition: color 160ms var(--ease-emil-out), transform 160ms var(--ease-emil-out);
 }
 
-.sidebar-item__icon svg {
-  width: 16px;
-  height: 16px;
-}
-
-.sidebar-item__label {
-  font-size: 9px;
-  font-weight: var(--weight-medium);
+/* Label (Recommendation: 13–14px) */
+.sidebar-item .sidebar-item__label {
+  font-size: 13.5px;
   font-family: var(--font-chrome);
-  line-height: 1;
-  letter-spacing: 0.02em;
-  color: inherit;
-  text-align: center;
+  font-weight: 500;
+  color: #8A99B1;
+  letter-spacing: 0.01em;
   white-space: nowrap;
   overflow: hidden;
-  max-width: 44px;
   text-overflow: ellipsis;
+  line-height: 1;
+  transition: color 160ms var(--ease-emil-out);
 }
 
-/* ─── Reduced motion ─────────────────────────────────────────────── */
+.icon-sidebar--collapsed .sidebar-item .sidebar-item__label {
+  display: none;
+}
+
+/* ─── 03: Hover State (Subtle charcoal/slate surface & gentle transition) */
+.sidebar-item:hover:not(.sidebar-item--active) {
+  background: rgba(138, 153, 177, 0.08);
+  border-color: rgba(138, 153, 177, 0.12);
+  color: var(--arbelune-cream, #F5E4C4);
+}
+
+.sidebar-item:hover:not(.sidebar-item--active) .sidebar-item__icon {
+  color: var(--arbelune-cream, #F5E4C4);
+  transform: scale(1.04);
+}
+
+.sidebar-item:hover:not(.sidebar-item--active) .sidebar-item__label {
+  color: var(--arbelune-cream, #F5E4C4);
+}
+
+/* ─── 02: Refined Active State (Softer rose tint & thin understated border) */
+.sidebar-item--active {
+  background: rgba(199, 137, 151, 0.15) !important;
+  border: 1px solid rgba(199, 137, 151, 0.30) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.sidebar-item--active .sidebar-item__icon {
+  color: #F5E4C4 !important;
+}
+
+.sidebar-item--active .sidebar-item__label {
+  color: #F5E4C4 !important;
+  font-weight: 600;
+}
+
+/* Active Press Micro-interaction */
+.sidebar-item:active {
+  transform: scale(0.98);
+}
+
+/* ─── 03: Keyboard Focus Indicator ─────────────────────────────────── */
+.sidebar-item:focus-visible {
+  outline: 2px solid rgba(199, 137, 151, 0.50);
+  outline-offset: 2px;
+}
+
+/* ─── 03: Active Running Tool Status Indicator ─────────────────────── */
+.sidebar-item__status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--arbelune-rose, #C78997);
+  margin-left: auto;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 2px rgba(11, 12, 16, 0.95);
+}
+
+.sidebar-item__status-dot--corner {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  width: 5px;
+  height: 5px;
+  margin: 0;
+}
+
+/* ─── 05: Polished Footer & Utility Area ───────────────────────────── */
+.icon-sidebar__bottom {
+  display: flex;
+  flex-direction: column;
+  padding: 6px 8px 10px 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  gap: 4px;
+}
+
+.icon-sidebar--collapsed .icon-sidebar__bottom {
+  align-items: center;
+  padding: 6px 4px 10px 4px;
+}
+
+.icon-sidebar__bottom-items {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
+.icon-sidebar__footer-utility {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 4px 0 4px;
+  margin-top: 2px;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.icon-sidebar--collapsed .icon-sidebar__footer-utility {
+  justify-content: center;
+  padding: 8px 0 0 0;
+}
+
+/* Dedicated Collapse Button */
+.icon-sidebar__collapse-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: background 160ms var(--ease-emil-out),
+              border-color 160ms var(--ease-emil-out),
+              color 160ms var(--ease-emil-out);
+}
+
+.icon-sidebar__collapse-btn:hover {
+  background: rgba(138, 153, 177, 0.12);
+  border-color: rgba(138, 153, 177, 0.20);
+  color: var(--color-text-primary);
+}
+
+.icon-sidebar__collapse-btn:focus-visible {
+  outline: 2px solid rgba(199, 137, 151, 0.50);
+  outline-offset: 2px;
+}
+
+/* Interactive Version Badge */
+.icon-sidebar__version-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  cursor: default;
+  transition: background 160ms var(--ease-emil-out),
+              border-color 160ms var(--ease-emil-out);
+}
+
+.icon-sidebar__version-badge:hover,
+.icon-sidebar__version-badge:focus-visible {
+  background: rgba(199, 137, 151, 0.10);
+  border-color: rgba(199, 137, 151, 0.25);
+  outline: none;
+}
+
+.icon-sidebar__version-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #68D391;
+}
+
+.icon-sidebar__version-text {
+  font-size: 10px;
+  font-family: var(--font-mono, JetBrains Mono);
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+/* ─── Reduced Motion ───────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
-  .sidebar-item {
-    transition: none;
+  .icon-sidebar {
+    transition: none !important;
   }
-  .sidebar-item::before {
-    transition: none;
+  .sidebar-item {
+    transition: none !important;
   }
   .sidebar-item:active {
-    transform: none;
+    transform: none !important;
+  }
+  .icon-sidebar__collapse-btn {
+    transition: none !important;
   }
 }

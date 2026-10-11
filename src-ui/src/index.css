@@ -21,7 +21,7 @@ body,
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: transparent;
+  background: var(--arbelune-obsidian, #0B0C10);
   color: var(--color-text-primary);
   font-family: var(--font-chrome);
   font-size: var(--text-base);
@@ -110,11 +110,11 @@ body,
   opacity: 0.8;
 }
 
-/* ─── Gradient background for the app ──────────────────────────────────── */
+/* ─── Obsidian background for the app ──────────────────────────────────── */
 .arbelune-bg,
 .kage-bg {
   background:
-    radial-gradient(ellipse 80% 60% at 20% 10%, rgba(69, 9, 32, 0.4) 0%, transparent 70%),
-    radial-gradient(ellipse 60% 80% at 80% 90%, rgba(44, 9, 24, 0.5) 0%, transparent 70%),
+    radial-gradient(ellipse 80% 60% at 20% 10%, rgba(199, 137, 151, 0.05) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 80% at 80% 90%, rgba(138, 153, 177, 0.04) 0%, transparent 70%),
     var(--color-bg-base);
 }
